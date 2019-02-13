@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Networking on C B Masters</title>
+    <link>https://blog.cbmasters.com/tags/networking/</link>
+    <description>Recent content in Networking on C B Masters</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Feb 2019 20:38:45 -0500</lastBuildDate>
+    
+	<atom:link href="https://blog.cbmasters.com/tags/networking/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Nsx T</title>
+      <link>https://blog.cbmasters.com/posts/nsx-t/nsx-t/</link>
+      <pubDate>Thu, 07 Feb 2019 20:38:45 -0500</pubDate>
+      
+      <guid>https://blog.cbmasters.com/posts/nsx-t/nsx-t/</guid>
+      <description>First Ascidocsetup NSX-T :imagesoutdir: images
+ {imagesoutdir} if the imagesoutdir attribute has been specified
+{outdir}/{imagesdir} if the outdir attribute has been specified
+{to_dir}/{imagesdir} if the to_dir attribute has been specified
+{base_dir}/{imagesdir}
+ </description>
+    </item>
+    
+  </channel>
+</rss>

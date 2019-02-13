@@ -1,0 +1,700 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Cache-Control" content="public" />
+<!-- Enable responsiveness on mobile devices -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="generator" content="Hugo 0.54.0" />
+
+    
+    
+    
+
+<title>Samba AD • C B Masters</title>
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Samba AD"/>
+<meta name="twitter:description" content="Using [Samba](https://www.samba.org/) for LDAP, Active Directory, and Dynamic DNS."/>
+
+<meta property="og:title" content="Samba AD" />
+<meta property="og:description" content="Using [Samba](https://www.samba.org/) for LDAP, Active Directory, and Dynamic DNS." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://blog.cbmasters.com/posts/samba-ad/" />
+<meta property="article:published_time" content="2019-01-31T19:01:28-05:00"/>
+<meta property="article:modified_time" content="2019-01-31T19:01:28-05:00"/>
+
+
+
+<link rel="canonical" href="https://blog.cbmasters.com/posts/samba-ad/" />
+
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<link rel="stylesheet" href="/css/w3.css" />
+
+
+
+<link rel="stylesheet" href="/css/style.css" />
+
+
+
+
+
+<script src="/js/clipboard.min.js"></script>
+
+
+<link rel="stylesheet" href="/css/highlight.css">
+<script src="/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+
+
+
+
+  
+  
+</head>
+<body class="w3-light-grey">
+
+
+    
+    <header id="header">
+         
+        <div class="w3-right ">
+<div class="w3-bar w3-light-grey  ">
+  
+
+  
+      <span class="w3-hide-small">
+
+      </span>
+  
+</div>
+</div>
+<br>
+  <div class="w3-content">
+  
+  <div class="w3-container w3-center w3-hide-small"> 
+      <h1 class="w3-xxxlarge w3-text-blue w3-wide w3-allerta  " style="text-shadow:1px 1px 0 slateblue" ><u>
+      
+         Masters
+      
+</u></h1>
+      
+    </div>
+    <div class="w3-content w3-center">
+    <div class="w3-bar w3-light-grey w3-border">
+    <a href="/" class="w3-bar-item w3-button w3-large w3-blue"><i class="fa fa-home"></i></a>
+    
+      <a href="/categories/" class="w3-bar-item w3-button w3-hide-small">Categories</a>
+    
+      <a href="/tags/" class="w3-bar-item w3-button w3-hide-small">Tags</a>
+    
+      <a href="/allposts/" class="w3-bar-item w3-button w3-hide-small">All Posts</a>
+    
+   
+    
+    <a href="javascript:void(0)" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="displaymenu()">&#9776;</a>
+  </div>
+
+<div id="mobilemenu" class="w3-bar-block w3-light-grey w3-hide w3-hide-large w3-hide-medium">
+  
+      <a href="/categories/" class="w3-bar-item w3-button">Categories</a>
+      
+      <a href="/tags/" class="w3-bar-item w3-button">Tags</a>
+      
+      <a href="/allposts/" class="w3-bar-item w3-button">All Posts</a>
+      
+  
+</div>
+</div>
+</div>
+<script>
+function displaymenu() {
+    var x = document.getElementById("mobilemenu");
+    if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+    } else { 
+        x.className = x.className.replace(" w3-show", "");
+    }
+}
+</script>
+
+
+
+    
+    <hr class="headfoot">
+   
+      
+    </header>
+    
+<div class="w3-content">
+    
+      <div>
+        <div id="content" >
+          
+    
+
+      <div id="toc" class="w3-dropdown-hover w3-hide-small w3-hide-medium">
+    <button class="w3-button w3-teal w3-xlarge">&#9776;</button>
+    <div class="w3-dropdown-content w3-bar-block w3-border" style="right:0">
+         
+          <h3 class="w3-center">Contents </h3>
+            <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#install-bind">Install BIND</a></li>
+<li><a href="#install-samba">Install Samba</a></li>
+<li><a href="#samba-configuration">Samba Configuration</a>
+<ul>
+<li><a href="#fix-app-armor">Fix App Armor</a></li>
+<li><a href="#testing">Testing</a></li>
+<li><a href="#configure-ldaps">Configure LDAPS</a></li>
+<li><a href="#allow-anonymous-binds-and-searches">Allow anonymous binds and searches</a></li>
+</ul></li>
+<li><a href="#add-sample-data">Add Sample Data</a></li>
+</ul></li>
+</ul>
+</nav>
+         
+      </div>
+
+     
+      </div>
+    
+
+ 
+     
+
+
+  <div class="w3-content w3-card-4" >
+    
+    <header class="w3-container w3-center w3-padding-32">
+      <h1>Samba AD</h1>
+
+      <div >
+        <p> 2019-01-31 
+          
+        </p>
+        <div >
+            
+              <a class="w3-btn w3-small w3-round w3-green" href="/categories/lab/"> lab </a>
+            
+          </div>
+       
+        
+      </div>
+    </header>
+
+   
+    
+    <div class="w3-container">
+      
+        
+
+        
+        
+
+        
+          
+
+<p>A guide to using <a href="https://www.samba.org/">Samba</a> for LDAP, Active Directory, and Dynamic DNS.</p>
+
+<h2 id="install-bind">Install BIND</h2>
+
+<p>Installing BIND 9 since Samba&rsquo;s internal DNS does not support wildcards entries.</p>
+
+<p>Follow <a href="https://wiki.samba.org/index.php/Setting_up_a_BIND_DNS_Server">Samba BIND Setup</a></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ sudo apt install bind9 ldap-utils</code></pre></div>
+<p>Modify the <em>named</em> config <code>/etc/bind/named.conf.options</code> to include networks we allow DNS forwarding.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">        allow-query {
+                127.0.0.1;
+                10.0.0.0/8;
+                172.16.0.0/12;
+                192.168.0.0/16;
+        };
+
+        recursion yes;
+
+        forwarders {
+                172.16.31.1;
+        };
+
+        forward only;</code></pre></div>
+<p>Also uncomment the include line in <code>/etc/bind/named.conf.local</code> to provide reverse lookups.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">include &#34;/etc/bind/zones.rfc1918&#34;;</pre></div>
+<p>Restart named.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo systemctl restart bind9</code></pre></div>
+<h2 id="install-samba">Install Samba</h2>
+
+<p>Check the samba version</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ samba -V
+Version <span style="color:#0000cf;font-weight:bold">4</span>.7.6-Ubuntu</code></pre></div>
+<p>This version is too old.  Build from source following <a href="https://wiki.samba.org/index.php/Build_Samba_from_Source#Introduction">Build Guide</a>.</p>
+
+<p>Start with <a href="https://wiki.samba.org/index.php/Package_Dependencies_Required_to_Build_Samba#Debian_.2F_Ubuntu">Install dependencies</a>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo apt purge samba 
+clint:~$ sudo apt remove libwbclient0
+clint:~$ sudo apt auto-remove
+clint:~$ sudo apt-get install acl attr autoconf bind9utils bison build-essential debhelper <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>dnsutils docbook-xml docbook-xsl flex gdb libjansson-dev krb5-user libacl1-dev libaio-dev <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>libarchive-dev libattr1-dev libblkid-dev libbsd-dev libcap-dev libcups2-dev libgnutls28-dev <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>libgpgme-dev libjson-perl libldap2-dev libncurses5-dev libpam0g-dev libparse-yapp-perl <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>libpopt-dev libreadline-dev nettle-dev perl perl-modules-5.26 pkg-config python-all-dev <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>python-crypto python-dbg python-dev python-dnspython python3-dnspython python-gpg <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>python3-gpg python-markdown python3-markdown python3-dev xsltproc zlib1g-dev liblmdb-dev <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>lmdb-utils libsystemd-dev
+
+clint:~/code$ wget https://download.samba.org/pub/samba/stable/samba-4.9.4.tar.gz
+
+clint:~/code$ tar -zxf samba-4.9.4.tar.gz </code></pre></div>
+<p>Use configure options to match the samba directory structure more or less match what we expect on Ubuntu.  The list below is modifed from <a href="https://vapour-apps.com/build-samba-4-9-from-source-on-debian-9-or-ubuntu-18-04/">Vapour-Apps</a>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~/code/samba-4.9.4$ sed -E <span style="color:#4e9a06">&#34;/Type=notify|NotifyAccess=all/d&#34;</span> <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>./bin/default/packaging/systemd/samba.service
+
+clint:~/code/samba-4.9.4$ ./configure <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--prefix<span style="color:#ce5c00;font-weight:bold">=</span>/usr <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--enable-fhs <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--sysconfdir<span style="color:#ce5c00;font-weight:bold">=</span>/etc <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--localstatedir<span style="color:#ce5c00;font-weight:bold">=</span>/var <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--libexecdir<span style="color:#ce5c00;font-weight:bold">=</span>/usr/lib <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--with-privatedir<span style="color:#ce5c00;font-weight:bold">=</span>/var/lib/samba/private <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--with-smbpasswd-file<span style="color:#ce5c00;font-weight:bold">=</span>/etc/samba/smbpasswd <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--with-piddir<span style="color:#ce5c00;font-weight:bold">=</span>/var/run/samba <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--with-pammodulesdir<span style="color:#ce5c00;font-weight:bold">=</span>/lib/x86_64-linux-gnu/security <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--libdir<span style="color:#ce5c00;font-weight:bold">=</span>/usr/lib/x86_64-linux-gnu <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--with-modulesdir<span style="color:#ce5c00;font-weight:bold">=</span>/usr/lib/x86_64-linux-gnu/samba <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--datadir<span style="color:#ce5c00;font-weight:bold">=</span>/usr/share <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--with-lockdir<span style="color:#ce5c00;font-weight:bold">=</span>/var/run/samba <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--with-statedir<span style="color:#ce5c00;font-weight:bold">=</span>/var/lib/samba <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--with-cachedir<span style="color:#ce5c00;font-weight:bold">=</span>/var/cache/samba <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--systemd-install-services</code></pre></div>
+<p>Start the make with a thread per cpu.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~/code/samba-4.9.4$ make -j2</code></pre></div>
+<p>If you would like a apt package use <em>checkinstall</em>.  My results were mixed.  Specify the version in <code>--pkgversion</code> to match Ubuntu format for Samba.  This is version 4.9.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~/code/samba-4.9.4$ sudo apt install checkinstall
+clint:~/code/samba-4.9.4$ make install
+clint:~/code/samba-4.9.4$ sudo checkinstall --requires<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;acl,attr,bind9utils,bison,debhelper,dnsutils,docbook-xml,docbook-xsl,flex,gdb,krb5-user,libacl1-dev,libattr1-dev,libcups2-dev,libgnutls28-dev,libgpgme11-dev,libjson-perl,libldap2-dev,libncurses5-dev,libpam0g-dev,libparse-yapp-perl,perl,perl-modules,python-crypto,python-dbg,python-dnspython,python3-dnspython,python-gpg,python3-gpg,python-markdown,python3-markdown,xsltproc,lmdb-utils&#39;</span> -y --pkgversion<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">2</span>:4.9.4
+
+**********************************************************************
+
+ Done. The new package has been installed and saved to
+
+ /home/clint/code/samba-4.9.4/samba_4.9.4-1_amd64.deb
+
+ You can remove it from your system anytime using: 
+
+      dpkg -r samba
+
+**********************************************************************</code></pre></div>
+<h2 id="samba-configuration">Samba Configuration</h2>
+
+<p>Setup a few variables for use in the installation.  These need to be customized to your domain name, etc..</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo rm /etc/samba/smb.conf
+
+clint:~$ <span style="color:#204a87">export</span> <span style="color:#000">DOMAIN</span><span style="color:#ce5c00;font-weight:bold">=</span>lab
+
+clint:~$ <span style="color:#204a87">export</span> <span style="color:#000">REALM</span><span style="color:#ce5c00;font-weight:bold">=</span>LAB.EXAMPLE.com
+
+clint:~$ <span style="color:#204a87">export</span> <span style="color:#000">PASSWD</span><span style="color:#ce5c00;font-weight:bold">=</span>********</code></pre></div>
+<p>Following <a href="https://wiki.samba.org/index.php/Setting_up_Samba_as_an_Active_Directory_Domain_Controller">Samba as AD Controller</a></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo samba-tool domain provision --server-role<span style="color:#ce5c00;font-weight:bold">=</span>dc --use-rfc2307 --dns-backend<span style="color:#ce5c00;font-weight:bold">=</span>BIND9_DLZ --realm<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$REALM</span> --domain<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DOMAIN</span> --adminpass<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$PASSWD</span>
+
+A Kerberos configuration suitable <span style="color:#204a87;font-weight:bold">for</span> Samba AD has been generated at /var/lib/samba/private/krb5.conf
+Merge the contents of this file with your system krb5.conf or replace it with this one. Do not create a symlink!
+Setting up fake yp server settings
+Once the above files are installed, your Samba AD server will be ready to use
+Server Role:           active directory domain controller
+Hostname:              jump
+NetBIOS Domain:        LAB
+DNS Domain:            lab.example.com
+DOMAIN SID:            S-1-5-21-111679553-2008934376-681026361
+
+clint:~$ sudo cp /var/lib/samba/private/krb5.conf /etc/krb5.conf</code></pre></div>
+<p>Things you do in lab &hellip; turn off password aging and complexity.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo samba-tool domain passwordsettings <span style="color:#204a87">set</span> --complexity<span style="color:#ce5c00;font-weight:bold">=</span>off
+clint:~$ sudo samba-tool domain passwordsettings <span style="color:#204a87">set</span> --history-length<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">0</span>
+clint:~$ sudo samba-tool domain passwordsettings <span style="color:#204a87">set</span> --min-pwd-age<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">0</span>
+clint:~$ sudo samba-tool domain passwordsettings <span style="color:#204a87">set</span> --max-pwd-age<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">0</span></code></pre></div>
+<p>Follow the <a href="https://wiki.samba.org/index.php/BIND9_DLZ_DNS_Back_End#Configuring_the_BIND9_DLZ_Module">Samba Bind DLZ Guide</a></p>
+
+<p>Add <em>Samba&rsquo;s</em> DNS configuration to <em>named</em> by editing <code>/etc/bind/named.conf</code> and adding this line:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext"> include &#34;/var/lib/samba/bind-dns/named.conf&#34;;</code></pre></div>
+<p>Add Dynamic DNS Updates to <em>named</em> configuration by adding this line to <code>/etc/bind/named.conf.options</code></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-plaintext" data-lang="plaintext">    tkey-gssapi-keytab &#34;/var/lib/samba/bind-dns/dns.keytab&#34;;</code></pre></div>
+<p>Restart <em>bind</em>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo systemctl restart bind9</code></pre></div>
+<h3 id="fix-app-armor">Fix App Armor</h3>
+
+<p>Fix App Armor so bind can read the configuration file in the Samba directory using this <a href="https://wiki.samba.org/index.php/BIND9_DLZ_AppArmor_and_SELinux_Integration">guide</a>.</p>
+
+<p>Allow a local apparmor profile for bind by editing <code>/etc/apparmor.d/local/usr.sbin.named</code></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"># Samba DLZ and Active Directory Zones --cbm
+/var/lib/samba/bind-dns/named.conf rm,
+/var/lib/samba/private/dns.keytab r,
+/var/lib/samba/bind-dns/** rwk,
+/etc/samba/smb.conf r,
+/usr/lib/x86_64-linux-gnu/samba/** rm,
+/usr/lib/x86_64-linux-gnu/** rm,
+/dev/urandom rw,</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo systemctl reload apparmor.service
+clint:~$ sudo systemctl restart bind9</code></pre></div>
+<p>Use <code>journalctl</code> to check logs.</p>
+
+<h3 id="testing">Testing</h3>
+
+<p>Test the DNS records.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ host -t SRV _ldap._tcp.lab.example.com. <span style="color:#0000cf;font-weight:bold">127</span>.0.0.1
+clint:~$ host -t SRV _kerberos._udp.lab.example.com. <span style="color:#0000cf;font-weight:bold">127</span>.0.0.1
+clint:~$ host -t A jump.lab.example.com.</code></pre></div>
+<h3 id="configure-ldaps">Configure LDAPS</h3>
+
+<p>The default setup creates a self-signed certificate in <code>/var/lib/samba/private/tls</code>.  Follow <a href="https://wiki.samba.org/index.php/Configuring_LDAP_over_SSL_(LDAPS)_on_a_Samba_AD_DC">Samba LDAP Guide</a> if you would like to specify your own cert.</p>
+
+<p>Skip SSL verification by adding &ldquo;tls&rdquo; line to <code>/etc/samba/smb.conf</code>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"># Skip TLS check
+tls verify peer = no_check</pre></div>
+<p>This server had docker running since its a test server so we also need to limit Samba&rsquo;s interfaces binding by add these lines to <code>/etc/samba/smb.conf</code>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"># Don&#39;t use Docker interfaces
+bind interfaces only = yes
+interfaces = lo en* eth*</pre></div>
+<p>Restart Samba</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo systemctl restart samba</code></pre></div>
+<h3 id="allow-anonymous-binds-and-searches">Allow anonymous binds and searches</h3>
+
+<p>Follow <a href="https://fy.blackhats.net.au/blog/html/2018/04/18/making_samba_4_the_default_ldap_server.html?highlight=samba">Firstyear&rsquo;s blog</a> for adding anonymous binds and searches.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ samba-tool forest directory_service dsheuristics <span style="color:#0000cf;font-weight:bold">0000002</span> -H ldaps://localhost --simple-bind-dn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#000">$ADMIN</span><span style="color:#4e9a06">&#34;</span>
+
+clint:~$ <span style="color:#204a87">export</span> <span style="color:#000">ADMIN</span><span style="color:#ce5c00;font-weight:bold">=</span>administrator@lab.example.com
+
+clint:~$ <span style="color:#204a87">export</span> <span style="color:#000">BASEDN</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">DC</span><span style="color:#ce5c00;font-weight:bold">=</span>lab,DC<span style="color:#ce5c00;font-weight:bold">=</span>cbmasters,DC<span style="color:#ce5c00;font-weight:bold">=</span>com
+
+clint:~$ ldapsearch -b <span style="color:#000">$BASEDN</span> -H ldap://localhost -x
+
+clint:~$ samba-tool dsacl <span style="color:#204a87">set</span> --objectdn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$BASEDN</span> --sddl<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;(A;;RPLCLORC;;;AN)&#39;</span> --simple-bind-dn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#000">$ADMIN</span><span style="color:#4e9a06">&#34;</span> --password<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$PASSWD</span>
+
+clint:~$ samba-tool dsacl <span style="color:#204a87">set</span> --objectdn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$BASEDN</span> --sddl<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;(A;CI;RPLCLORC;;;AN)&#39;</span> --simple-bind-dn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#000">$ADMIN</span><span style="color:#4e9a06">&#34;</span> --password<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$PASSWD</span>
+
+clint:~$ samba-tool dsacl <span style="color:#204a87">set</span> --objectdn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$BASEDN</span> --sddl<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;(A;CI;RPLCLORC;;;AN)&#39;</span> --simple-bind-dn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#000">$ADMIN</span><span style="color:#4e9a06">&#34;</span> --password<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$PASSWD</span></code></pre></div>
+<p>LDAP SSL in on port 636.  Basic is 389.  Check that Samba is listening to LDAP ports.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#8f5902;font-style:italic"># lsof -i -P -n | grep -E &#39;636|389&#39;</span></code></pre></div>
+<h2 id="add-sample-data">Add Sample Data</h2>
+
+<p>Following <a href="https://wiki.samba.org/index.php/Adding_users_with_samba_tool">Samba Adding Users Guide</a>, add a user.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo samba-tool user create user --given-name User --surname Masters <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--nis-domain <span style="color:#000">$DOMAIN</span> <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--uid-number <span style="color:#0000cf;font-weight:bold">2005</span> <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--login-shell /bin/bash <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--unix-home /home/user <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--gid-number <span style="color:#0000cf;font-weight:bold">2005</span> <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--gecos <span style="color:#4e9a06">&#39;Test User,,,&#39;</span> </code></pre></div>
+                 
+                
+         
+      
+    </div>
+
+    
+   
+
+    <div class="w3-container">
+    	
+      <div class="w3-container">
+        	<hr class = "tag">
+        Tags: 
+          
+          <a class="w3-btn w3-small w3-round w3-green" href="/tags/homelab/">homelab</a>
+          
+          <a class="w3-btn w3-small w3-round w3-green" href="/tags/ldap/">ldap</a>
+          
+          <hr class = "tag">
+       
+        </div>
+     
+	</div>
+
+
+
+  
+
+
+    
+    
+    
+    
+    <br>  
+</div>
+
+
+
+<div class="w3-container w3-card-2 w3-black">
+<div class="w3-row">
+  <div class="w3-col l2 m2 s12 w3-center">
+  
+    <img src="/apple-touch-icon-180x180.png" width ="100px" class="w3-circle w3-center w3-margin-top w3-margin-bottom" alt="author" >
+   
+  </div>
+  <div class="w3-col l10 m10 s12 ">
+  <div class = "w3-container w3-margin-top">
+    <h4>Authored By Masters</h4>
+    <p class="w3-small">This article is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/" class="w3-text-white">Creative Commons Attribution 4.0 International License</a>.</p>
+  </div>
+  </div>
+  </div>
+</div>
+
+      
+    <div class="w3-content" > 
+      <div class="w3-bar w3-section">
+	     
+	    
+	      <a class="w3-btn w3-right w3-text-indigo w3-hover-green" href="/posts/jumpbox/">
+	       Jumpbox &#10095;
+	      </a>
+  	  </div>
+    </div>
+	
+ 
+
+  
+  
+  
+        </div>
+        
+           
+          
+  
+
+        
+        
+      </div>
+    
+
+   
+    <footer id="footer" >
+      <div class="w3-container w3-center w3-padding-32"> 
+  
+  <hr class="headfoot">
+  <p>Powered by <a href="https://gohugo.io">Hugo</a> | Theme - <a href="https://github.com/jesselau76/hugo-w3-simple">Hugo W3 Simple</a>
+  </p>
+  &copy; <a href="https://blog.cbmasters.com">Clinton Masters</a> 2019 | <a href="https://github.com/clintonmasters">Github</a> | <a href="/index.xml">RSS</a>
+  
+</div>
+
+    </footer>
+    
+
+    
+  </div>
+
+   
+  <div id="cookiebar" class="w3-bar w3-top w3-black w3-border   " >
+  
+  <span class="w3-bar-item w3-small">This website uses cookies to ensure you get the best experience on our website. <a href="/privacy-policy/">Learn more</a></span>
+  <span onclick="gotitcookiebar()"
+  class="w3-button w3-small w3-green w3-right">Got it</span>
+   </div>
+
+    
+<script>
+function gotitcookiebar() {
+    var x =document.getElementById("cookiebar");
+    x.style.display = "none";
+var x = document.getElementsByTagName("BODY")[0];
+    x.style.paddingTop = "0px";
+    
+
+}
+
+
+    
+function checkCookie() {
+    var user=getCookie("cookiebardisplayed");
+    if (user == "") {
+      setCookie("cookiebardisplayed","0",365);}
+
+    user=getCookie("cookiebardisplayed");
+    if (user =="0")
+    {
+
+        var x =document.getElementById("cookiebar");
+    x.style.display = "block";
+    var h = document.getElementById('cookiebar').clientHeight;
+    
+    var x = document.getElementsByTagName("BODY")[0];
+    x.style.paddingTop = h+"px";
+    setCookie("cookiebardisplayed","1",365);
+    } 
+    
+}
+function setCookie(cname,cvalue,exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires=" + d.toGMTString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+document.addEventListener('DOMContentLoaded', function() {
+    checkCookie();
+}, false);
+
+</script>   
+
+
+  
+    
+      <div id="backtotop" class="w3-hide-small w3-hide-medium">
+  
+        <button onclick="topFunction()" class="w3-btn w3-red w3-large" style="width:160px">Back To Top
+        &rarr;</button>
+        
+      </div>
+
+      <script>
+        function topFunction() {
+          document.body.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
+      }
+      </script>
+
+
+    
+ 
+    
+    <script>
+    
+    function isVisible(elem) {
+
+      let coords = elem.getBoundingClientRect();
+
+      let windowHeight = document.documentElement.clientHeight;
+
+      
+      let topVisible = coords.top > 0 && coords.top < windowHeight;
+      let bottomVisible = coords.bottom < windowHeight && coords.bottom > 0;
+
+      return topVisible || bottomVisible;
+    }
+
+    
+
+    function showVisible() {
+      for (let img of document.querySelectorAll('img')) {
+        let realSrc = img.dataset.src;
+        if (!realSrc) continue;
+
+        if (isVisible(img)) {
+          
+
+          img.src = realSrc;
+
+          img.dataset.src = '';
+        }
+      }
+      if ( Array.from(document.querySelectorAll('[data-src]')).every(
+        img => img.getAttribute('data-src') === '') ) {
+        window.removeEventListener('scroll', showVisible)
+      }
+
+    }
+
+    window.addEventListener('scroll', showVisible);
+    showVisible();
+  </script>
+
+
+    
+    
+      <div class="progress-container" id="scrollbar">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>  
+
+
+    
+<script>
+
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+  <!-- TOC -->
+    
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        document.getElementById("toc").style.display = "block";
+    } else {
+        document.getElementById("toc").style.display = "none";
+    }
+    
+    <!-- cookie bar -->
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        var x =document.getElementById("cookiebar");
+        x.style.display = "none";
+        var x = document.getElementsByTagName("BODY")[0];
+        x.style.paddingTop = "0px";
+
+    } 
+    
+<!-- Back to top -->
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        document.getElementById("backtotop").style.display = "block";
+    } else {
+        document.getElementById("backtotop").style.display = "none";
+    }
+    
+    <!-- scroll indicator -->
+    
+      var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      var scrolled = (winScroll / height) * 100;
+      document.getElementById("progress-bar").style.width = scrolled + "%";
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            document.getElementById("scrollbar").style.display = "block";
+        } else {
+            document.getElementById("scrollbar").style.display = "none";
+        }
+    
+
+    
+
+    <!-- allowads -->
+    
+}
+
+
+</script>
+
+
+
+  
+
+</body>
+</html>

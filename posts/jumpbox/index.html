@@ -1,0 +1,440 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Cache-Control" content="public" />
+<!-- Enable responsiveness on mobile devices -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="generator" content="Hugo 0.54.0" />
+
+    
+    
+    
+
+<title>Jumpbox • C B Masters</title>
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Jumpbox"/>
+<meta name="twitter:description" content="Faster deployments in Public Cloud"/>
+
+<meta property="og:title" content="Jumpbox" />
+<meta property="og:description" content="Faster deployments in Public Cloud" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://blog.cbmasters.com/posts/jumpbox/" />
+<meta property="article:published_time" content="2018-06-07T09:31:55-05:00"/>
+<meta property="article:modified_time" content="2018-06-07T09:31:55-05:00"/>
+
+
+
+<link rel="canonical" href="https://blog.cbmasters.com/posts/jumpbox/" />
+
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<link rel="stylesheet" href="/css/w3.css" />
+
+
+
+<link rel="stylesheet" href="/css/style.css" />
+
+
+
+
+
+<script src="/js/clipboard.min.js"></script>
+
+
+<link rel="stylesheet" href="/css/highlight.css">
+<script src="/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+
+
+
+
+  
+  
+</head>
+<body class="w3-light-grey">
+
+
+    
+    <header id="header">
+         
+        <div class="w3-right ">
+<div class="w3-bar w3-light-grey  ">
+  
+
+  
+      <span class="w3-hide-small">
+
+      </span>
+  
+</div>
+</div>
+<br>
+  <div class="w3-content">
+  
+  <div class="w3-container w3-center w3-hide-small"> 
+      <h1 class="w3-xxxlarge w3-text-blue w3-wide w3-allerta  " style="text-shadow:1px 1px 0 slateblue" ><u>
+      
+         Masters
+      
+</u></h1>
+      
+    </div>
+    <div class="w3-content w3-center">
+    <div class="w3-bar w3-light-grey w3-border">
+    <a href="/" class="w3-bar-item w3-button w3-large w3-blue"><i class="fa fa-home"></i></a>
+    
+      <a href="/categories/" class="w3-bar-item w3-button w3-hide-small">Categories</a>
+    
+      <a href="/tags/" class="w3-bar-item w3-button w3-hide-small">Tags</a>
+    
+      <a href="/allposts/" class="w3-bar-item w3-button w3-hide-small">All Posts</a>
+    
+   
+    
+    <a href="javascript:void(0)" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="displaymenu()">&#9776;</a>
+  </div>
+
+<div id="mobilemenu" class="w3-bar-block w3-light-grey w3-hide w3-hide-large w3-hide-medium">
+  
+      <a href="/categories/" class="w3-bar-item w3-button">Categories</a>
+      
+      <a href="/tags/" class="w3-bar-item w3-button">Tags</a>
+      
+      <a href="/allposts/" class="w3-bar-item w3-button">All Posts</a>
+      
+  
+</div>
+</div>
+</div>
+<script>
+function displaymenu() {
+    var x = document.getElementById("mobilemenu");
+    if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+    } else { 
+        x.className = x.className.replace(" w3-show", "");
+    }
+}
+</script>
+
+
+
+    
+    <hr class="headfoot">
+   
+      
+    </header>
+    
+<div class="w3-content">
+    
+      <div>
+        <div id="content" >
+          
+    <div class="w3-container w3-card-4">
+      
+
+<p>When installing large packages like Cloud Foundry PaS or Kubernetes, it is much faster to use a jumpbox in the same cloud to download and upload the code.  Espscially when access to code requires a website login.  Usually you create a MS Windows VM and fight with MS edge to download Google Chrome.  Here is a method for a Linux jumpbox with web browser.</p>
+
+<h2 id="create-jumpbox-with-vnc-server">Create Jumpbox with VNC Server</h2>
+
+<p>Put this script in user data to install a desktop, web brower, and vnc on Ubuntu Server.  Note this is using the <em>ubuntu</em> user.  You can change if you plan on a different username.  Also change password in the <em>echo</em> line.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#8f5902;font-style:italic">#!/usr/bin/env bash
+</span><span style="color:#8f5902;font-style:italic"></span>apt-get update
+apt-get upgrade -y
+apt-get install -y mate-desktop tightvncserver mate-session-manager mate-terminal chromium-browser autocutsel unzip zip
+cat <span style="color:#4e9a06">&lt;&lt;EOF &gt; /etc/systemd/system/vncserver@.service 
+</span><span style="color:#4e9a06">[Unit]
+</span><span style="color:#4e9a06">Description=Start TightVNC server at startup
+</span><span style="color:#4e9a06">After=syslog.target network.target
+</span><span style="color:#4e9a06">
+</span><span style="color:#4e9a06">[Service]
+</span><span style="color:#4e9a06">Type=forking
+</span><span style="color:#4e9a06">User=ubuntu
+</span><span style="color:#4e9a06">PAMName=login
+</span><span style="color:#4e9a06">PIDFile=/home/ubutnu/.vnc/%H:%i.pid
+</span><span style="color:#4e9a06">ExecStartPre=-/usr/bin/tightvncserver -kill :%i &gt; /dev/null 2&gt;&amp;1
+</span><span style="color:#4e9a06">ExecStart= /usr/bin/tightvncserver -depth 24 -geometry 1280x800 :%i
+</span><span style="color:#4e9a06">ExecStop= /usr/bin/tightvncserver -kill :%i
+</span><span style="color:#4e9a06">
+</span><span style="color:#4e9a06">[Install]
+</span><span style="color:#4e9a06">WantedBy=multi-user.target
+</span><span style="color:#4e9a06">EOF</span>
+
+mkdir -p /home/ubuntu/.vnc
+<span style="color:#204a87">echo</span> <span style="color:#4e9a06">&#39;w?Y??D&#39;</span> &gt; /home/ubuntu/.vnc/passwd
+chmod <span style="color:#0000cf;font-weight:bold">600</span> /home/ubuntu/.vnc/passwd
+
+cat <span style="color:#4e9a06">&lt;&lt;EOF &gt; /home/ubuntu/.vnc/xstartup 
+</span><span style="color:#4e9a06">#!/usr/bin/env bash
+</span><span style="color:#4e9a06">unset SESSION_MANAGER
+</span><span style="color:#4e9a06">unset DBUS_SESSION_BUS_ADDRESS
+</span><span style="color:#4e9a06">export XKL_XMODMAP_DISABLE=1
+</span><span style="color:#4e9a06">
+</span><span style="color:#4e9a06">[ -x /etc/vnc/xstartup ] &amp;&amp; exec /etc/vnc/xstartup
+</span><span style="color:#4e9a06">[ -r $HOME/.Xresources ] &amp;&amp; xrdb $HOME/.Xresources
+</span><span style="color:#4e9a06">xsetroot -solid grey
+</span><span style="color:#4e9a06">#vncconfig -iconic &amp;
+</span><span style="color:#4e9a06">autocutsel -fork &amp;
+</span><span style="color:#4e9a06">x-terminal-emulator -geometry 80x24+10+10 -ls -title &#34;$VNCDESKTOP Desktop&#34; &amp;
+</span><span style="color:#4e9a06">x-window-manager &amp;
+</span><span style="color:#4e9a06">/usr/bin/mate-session &amp;
+</span><span style="color:#4e9a06">EOF</span>
+chmod <span style="color:#0000cf;font-weight:bold">700</span> /home/ubuntu/.vnc/xstartup 
+chown -R ubuntu:ubuntu /home/ubuntu/.vnc
+systemctl daemon-reload
+systemctl <span style="color:#204a87">enable</span> vncserver@1.service
+systemctl start vncserver@1
+systemctl status vncserver@1</code></pre></div>
+<p>More ideas are availible from <a href="https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-vnc-on-ubuntu-16-04">Digtal Ocean</a> amnd <a href="https://forums.linuxmint.com/viewtopic.php?t=99225">Mint</a>.</p>
+
+<h2 id="connecting-to-the-session">Connecting to the session</h2>
+
+<p>Use an ssh tunnel to connect to the jumpbox.  On your workstation</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">ssh -L <span style="color:#0000cf;font-weight:bold">5901</span>:127.0.0.1:5901 -N -f -l ubuntu -i deploy.pem ubuntu@ec2-18-217-70-116.us-east-2.compute.amazonaws.com</code></pre></div>
+<p>Then connect with a VNC client to <em>localhost:5901</em>.</p>
+
+<p>The password is <code>c1oudc0w</code>.  Use <em>vncpasswd</em> to change.</p>
+
+    </div>
+        </div>
+        
+           
+          
+  
+
+        
+        
+      </div>
+    
+
+   
+    <footer id="footer" >
+      <div class="w3-container w3-center w3-padding-32"> 
+  
+  <hr class="headfoot">
+  <p>Powered by <a href="https://gohugo.io">Hugo</a> | Theme - <a href="https://github.com/jesselau76/hugo-w3-simple">Hugo W3 Simple</a>
+  </p>
+  &copy; <a href="https://blog.cbmasters.com">Clinton Masters</a> 2019 | <a href="https://github.com/clintonmasters">Github</a> | <a href="/index.xml">RSS</a>
+  
+</div>
+
+    </footer>
+    
+
+    
+  </div>
+
+   
+  <div id="cookiebar" class="w3-bar w3-top w3-black w3-border   " >
+  
+  <span class="w3-bar-item w3-small">This website uses cookies to ensure you get the best experience on our website. <a href="/privacy-policy/">Learn more</a></span>
+  <span onclick="gotitcookiebar()"
+  class="w3-button w3-small w3-green w3-right">Got it</span>
+   </div>
+
+    
+<script>
+function gotitcookiebar() {
+    var x =document.getElementById("cookiebar");
+    x.style.display = "none";
+var x = document.getElementsByTagName("BODY")[0];
+    x.style.paddingTop = "0px";
+    
+
+}
+
+
+    
+function checkCookie() {
+    var user=getCookie("cookiebardisplayed");
+    if (user == "") {
+      setCookie("cookiebardisplayed","0",365);}
+
+    user=getCookie("cookiebardisplayed");
+    if (user =="0")
+    {
+
+        var x =document.getElementById("cookiebar");
+    x.style.display = "block";
+    var h = document.getElementById('cookiebar').clientHeight;
+    
+    var x = document.getElementsByTagName("BODY")[0];
+    x.style.paddingTop = h+"px";
+    setCookie("cookiebardisplayed","1",365);
+    } 
+    
+}
+function setCookie(cname,cvalue,exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires=" + d.toGMTString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+document.addEventListener('DOMContentLoaded', function() {
+    checkCookie();
+}, false);
+
+</script>   
+
+
+  
+    
+      <div id="backtotop" class="w3-hide-small w3-hide-medium">
+  
+        <button onclick="topFunction()" class="w3-btn w3-red w3-large" style="width:160px">Back To Top
+        &rarr;</button>
+        
+      </div>
+
+      <script>
+        function topFunction() {
+          document.body.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
+      }
+      </script>
+
+
+    
+ 
+    
+    <script>
+    
+    function isVisible(elem) {
+
+      let coords = elem.getBoundingClientRect();
+
+      let windowHeight = document.documentElement.clientHeight;
+
+      
+      let topVisible = coords.top > 0 && coords.top < windowHeight;
+      let bottomVisible = coords.bottom < windowHeight && coords.bottom > 0;
+
+      return topVisible || bottomVisible;
+    }
+
+    
+
+    function showVisible() {
+      for (let img of document.querySelectorAll('img')) {
+        let realSrc = img.dataset.src;
+        if (!realSrc) continue;
+
+        if (isVisible(img)) {
+          
+
+          img.src = realSrc;
+
+          img.dataset.src = '';
+        }
+      }
+      if ( Array.from(document.querySelectorAll('[data-src]')).every(
+        img => img.getAttribute('data-src') === '') ) {
+        window.removeEventListener('scroll', showVisible)
+      }
+
+    }
+
+    window.addEventListener('scroll', showVisible);
+    showVisible();
+  </script>
+
+
+    
+    
+      <div class="progress-container" id="scrollbar">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>  
+
+
+    
+<script>
+
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+  <!-- TOC -->
+    
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        document.getElementById("toc").style.display = "block";
+    } else {
+        document.getElementById("toc").style.display = "none";
+    }
+    
+    <!-- cookie bar -->
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        var x =document.getElementById("cookiebar");
+        x.style.display = "none";
+        var x = document.getElementsByTagName("BODY")[0];
+        x.style.paddingTop = "0px";
+
+    } 
+    
+<!-- Back to top -->
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        document.getElementById("backtotop").style.display = "block";
+    } else {
+        document.getElementById("backtotop").style.display = "none";
+    }
+    
+    <!-- scroll indicator -->
+    
+      var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      var scrolled = (winScroll / height) * 100;
+      document.getElementById("progress-bar").style.width = scrolled + "%";
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            document.getElementById("scrollbar").style.display = "block";
+        } else {
+            document.getElementById("scrollbar").style.display = "none";
+        }
+    
+
+    
+
+    <!-- allowads -->
+    
+}
+
+
+</script>
+
+
+
+  
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Aws on C B Masters</title>
+    <link>https://blog.cbmasters.com/tags/aws/</link>
+    <description>Recent content in Aws on C B Masters</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Jun 2018 09:31:55 -0500</lastBuildDate>
+    
+	<atom:link href="https://blog.cbmasters.com/tags/aws/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Jumpbox</title>
+      <link>https://blog.cbmasters.com/posts/jumpbox/</link>
+      <pubDate>Thu, 07 Jun 2018 09:31:55 -0500</pubDate>
+      
+      <guid>https://blog.cbmasters.com/posts/jumpbox/</guid>
+      <description>When installing large packages like Cloud Foundry PaS or Kubernetes, it is much faster to use a jumpbox in the same cloud to download and upload the code. Espscially when access to code requires a website login. Usually you create a MS Windows VM and fight with MS edge to download Google Chrome. Here is a method for a Linux jumpbox with web browser.
+Create Jumpbox with VNC Server Put this script in user data to install a desktop, web brower, and vnc on Ubuntu Server.</description>
+    </item>
+    
+  </channel>
+</rss>

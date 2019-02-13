@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>C B Masters</title>
+    <link>https://blog.cbmasters.com/</link>
+    <description>Recent content on C B Masters</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 31 Jan 2019 19:01:28 -0500</lastBuildDate>
+    
+	<atom:link href="https://blog.cbmasters.com/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Samba AD</title>
+      <link>https://blog.cbmasters.com/posts/samba-ad/</link>
+      <pubDate>Thu, 31 Jan 2019 19:01:28 -0500</pubDate>
+      
+      <guid>https://blog.cbmasters.com/posts/samba-ad/</guid>
+      <description>A guide to using Samba for LDAP, Active Directory, and Dynamic DNS.
+Install BIND Installing BIND 9 since Samba&amp;rsquo;s internal DNS does not support wildcards entries.
+Follow Samba BIND Setup
+$ sudo apt install bind9 ldap-utils Modify the named config /etc/bind/named.conf.options to include networks we allow DNS forwarding.
+allow-query { 127.0.0.1; 10.0.0.0/8; 172.16.0.0/12; 192.168.0.0/16; }; recursion yes; forwarders { 172.16.31.1; }; forward only; Also uncomment the include line in /etc/bind/named.</description>
+    </item>
+    
+    <item>
+      <title>About</title>
+      <link>https://blog.cbmasters.com/about/</link>
+      <pubDate>Sat, 10 Nov 2018 00:28:38 +0000</pubDate>
+      
+      <guid>https://blog.cbmasters.com/about/</guid>
+      <description>Masters</description>
+    </item>
+    
+    <item>
+      <title>Jumpbox</title>
+      <link>https://blog.cbmasters.com/posts/jumpbox/</link>
+      <pubDate>Thu, 07 Jun 2018 09:31:55 -0500</pubDate>
+      
+      <guid>https://blog.cbmasters.com/posts/jumpbox/</guid>
+      <description>When installing large packages like Cloud Foundry PaS or Kubernetes, it is much faster to use a jumpbox in the same cloud to download and upload the code. Espscially when access to code requires a website login. Usually you create a MS Windows VM and fight with MS edge to download Google Chrome. Here is a method for a Linux jumpbox with web browser.
+Create Jumpbox with VNC Server Put this script in user data to install a desktop, web brower, and vnc on Ubuntu Server.</description>
+    </item>
+    
+    <item>
+      <title>Search</title>
+      <link>https://blog.cbmasters.com/search/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://blog.cbmasters.com/search/</guid>
+      <description> Manticore Search </description>
+    </item>
+    
+  </channel>
+</rss>
