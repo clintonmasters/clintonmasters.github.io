@@ -1,0 +1,539 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Cache-Control" content="public" />
+<!-- Enable responsiveness on mobile devices -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="generator" content="Hugo 0.55.6" />
+
+    
+    
+    
+
+<title>BGP &amp; NSX-T &amp; USG • C B Masters</title>
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="BGP &amp; NSX-T &amp; USG"/>
+<meta name="twitter:description" content="BGP (Border Gateway Protocol) between VMware NSX-T and USG (Ubiquiti Security Gateway)"/>
+
+<meta property="og:title" content="BGP &amp; NSX-T &amp; USG" />
+<meta property="og:description" content="BGP (Border Gateway Protocol) between VMware NSX-T and USG (Ubiquiti Security Gateway)" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://blog.cbmasters.com/posts/bgp-nsxt-usg/" />
+<meta property="article:published_time" content="2019-06-06T21:31:56-04:00"/>
+<meta property="article:modified_time" content="2019-06-06T21:31:56-04:00"/>
+
+
+
+<link rel="canonical" href="https://blog.cbmasters.com/posts/bgp-nsxt-usg/" />
+
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<link rel="stylesheet" href="/css/w3.css" />
+
+
+
+<link rel="stylesheet" href="/css/style.css" />
+
+
+
+
+
+<script src="/js/clipboard.min.js"></script>
+
+
+<link rel="stylesheet" href="/css/highlight.css">
+<script src="/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+
+
+
+
+  
+  
+</head>
+<body class="w3-light-grey">
+
+
+    
+    <header id="header">
+         
+        <div class="w3-right ">
+<div class="w3-bar w3-light-grey  ">
+  
+
+  
+      <span class="w3-hide-small">
+
+      </span>
+  
+</div>
+</div>
+<br>
+  <div class="w3-content">
+  
+  <div class="w3-container w3-center w3-hide-small"> 
+      <h1 class="w3-xxxlarge w3-text-blue w3-wide w3-allerta  " style="text-shadow:1px 1px 0 slateblue" ><u>
+      
+         Masters
+      
+</u></h1>
+      
+    </div>
+    <div class="w3-content w3-center">
+    <div class="w3-bar w3-light-grey w3-border">
+    <a href="/" class="w3-bar-item w3-button w3-large w3-blue"><i class="fa fa-home"></i></a>
+    
+      <a href="/categories/" class="w3-bar-item w3-button w3-hide-small">Categories</a>
+    
+      <a href="/tags/" class="w3-bar-item w3-button w3-hide-small">Tags</a>
+    
+      <a href="/allposts/" class="w3-bar-item w3-button w3-hide-small">All Posts</a>
+    
+   
+    
+    <a href="javascript:void(0)" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="displaymenu()">&#9776;</a>
+  </div>
+
+<div id="mobilemenu" class="w3-bar-block w3-light-grey w3-hide w3-hide-large w3-hide-medium">
+  
+      <a href="/categories/" class="w3-bar-item w3-button">Categories</a>
+      
+      <a href="/tags/" class="w3-bar-item w3-button">Tags</a>
+      
+      <a href="/allposts/" class="w3-bar-item w3-button">All Posts</a>
+      
+  
+</div>
+</div>
+</div>
+<script>
+function displaymenu() {
+    var x = document.getElementById("mobilemenu");
+    if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+    } else { 
+        x.className = x.className.replace(" w3-show", "");
+    }
+}
+</script>
+
+
+
+    
+    <hr class="headfoot">
+   
+      
+    </header>
+    
+<div class="w3-content">
+    
+      <div>
+        <div id="content" >
+          
+    <div class="w3-container w3-card-4">
+      
+
+<h2 id="bgp-border-gateway-protocol-between-vmware-nsx-t-and-usg-ubiquiti-security-gateway">BGP (Border Gateway Protocol) between VMware NSX-T and USG (Ubiquiti Security Gateway)</h2>
+
+<p>Setup exterior BGP (Border Gateway Protocol) between VMware NSX-T and USG (Ubiquiti Security Gateway).  When trying NSX-T most start with static routes.  If we want to experiment with more advanced failure recovery modes with the edge, we need to move from static routes to a dynamic routing protocol between the upstream router and the NSX-T edge nodes. This exercise configures BGP between NSX-T and a USG.</p>
+
+<h2 id="sample-homelab-topology">Sample Homelab Topology</h2>
+
+<p>Values in this example:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">USG                     172.16.31.1
+NSX-T T0                172.16.31.2
+NAT for Infrastructure  172.16.30.0/24
+PKS SNAT VIP Pool       172.16.29.0/24</code></pre></div>
+<p>The Unifi will be in BGP AS 64512.  NSX-T will use BGP AS 64513.  BGP Autonomous System Numbers (AS) 64512-65534 are reserved similar to how RC1912 addresses are reserved for private use.</p>
+
+<h2 id="configuting-nsx-t">Configuting NSX-T</h2>
+
+<p>1) In NSX Manager enable BGP.  Select the Tier 0 route and goto the the Routing / BGP page.</p>
+
+<p><img src="/images/nsxt-bgp/nsxt-bgp-config.png" alt="BGP Configuration" title="Edit BGP Configuration" /></p>
+
+<p>Enable BGP.  This environment only has one router and one edge node, therefore <em>ECMP</em> (equal cost multipathing) is disabled and <em>Graceful Restart</em> is enabled.  Enter 64513 as the AN.  <em>Keep Alive</em> and <em>Hold Down</em> times at their defaults.</p>
+
+<p>In this example, we added route aggregation for 172.16.28.0/24, 172.16.29.0/24, and 172.16.30.0/24 to make the route table smaller.  This is optional.</p>
+
+<p>2) Add the USG as a BGP Neighbor. Click &ldquo;+ADD&rdquo; under Neighbors.  Enter 64512 as the remote AS and the IP address of the upstream router.  We already have a static default route pointing to this router when we setup NSX-T.</p>
+
+<p><img src="/images/nsxt-bgp/nsxt-bgp-neighbor.png" alt="BGP Neighbor" title="Edit BGP Configuration" /></p>
+
+<p>Next configure the USG.</p>
+
+<h2 id="configuring-the-usg">Configuring the USG</h2>
+
+<p>Our USG is managed by the Unifi Controller.  THe BGP settings are not configurable in Controller yet.  Here is the JSON needed in <em>config.gateway.json</em></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">  <span style="color:#4e9a06">&#34;protocols&#34;</span><span style="color:#a40000">:</span> <span style="color:#000;font-weight:bold">{</span>
+                <span style="color:#204a87;font-weight:bold">&#34;bgp&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
+                        <span style="color:#204a87;font-weight:bold">&#34;64512&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
+                                <span style="color:#204a87;font-weight:bold">&#34;neighbor&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
+                                        <span style="color:#204a87;font-weight:bold">&#34;172.16.31.2&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
+                                                <span style="color:#204a87;font-weight:bold">&#34;remote-as&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#4e9a06">&#34;64513&#34;</span>
+                                        <span style="color:#000;font-weight:bold">}</span>
+                                <span style="color:#000;font-weight:bold">},</span>
+                                <span style="color:#204a87;font-weight:bold">&#34;parameters&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
+                                        <span style="color:#204a87;font-weight:bold">&#34;router-id&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#4e9a06">&#34;172.16.31.1&#34;</span>
+                                <span style="color:#000;font-weight:bold">},</span>
+                                <span style="color:#204a87;font-weight:bold">&#34;redistribute&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
+                                        <span style="color:#204a87;font-weight:bold">&#34;static&#34;</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#4e9a06">&#34;&#39;&#39;&#34;</span>
+                                <span style="color:#000;font-weight:bold">}</span>
+
+                        <span style="color:#000;font-weight:bold">}</span>
+                <span style="color:#000;font-weight:bold">}</span>
+        <span style="color:#000;font-weight:bold">}</span></code></pre></div>
+<p>Making that change and reprovisioning the router will enable BGP.</p>
+
+<h3 id="optional-developing-a-different-bgp-configuration"><em>OPTIONAL</em> Developing a different BGP configuration</h3>
+
+<p><em>OPTIONAL</em> To try different configurations rapidly before changing <em>config.gateway.json</em>, use the CLI.  These commands are from Cowger&rsquo;s blog post on enabling iBGP referenced at the end.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">admin@usg:~$ configure
+set[edit]
+admin@usg# set protocols bgp 64512 parameters router-id 172.16.31.1
+[edit]
+admin@usg# set protocols bgp 64512 neighbor 172.16.31.2 remote-as 64513
+[edit]
+admin@usg# set protocols bgp 64512 redistribute static
+[edit]
+admin@usg# commit
+[ protocols bgp 64512 ]
+Starting routing daemon: bgpd.
+
+[edit]
+admin@usg# save
+Saving configuration to &#39;/config/config.boot&#39;...
+Done
+[edit]
+admin@usg# exit</code></pre></div>
+<p>View the current configuration and look for the BGP section to see what needs to be added to <em>config.gateway.json</em>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">admin@usg:~$ mca-ctrl -t dump-cfg</code></pre></div>
+<h2 id="viewing-the-usg-results">Viewing the USG Results</h2>
+
+<p>Check BGP on the USG.</p>
+
+<h3 id="with-route-summarization">With Route Summarization</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-nohighlight" data-lang="nohighlight">$ show ip bgp
+BGP table version is 0, local router ID is 172.16.31.1
+Status codes: s suppressed, d damped, h history, * valid, &gt; best, i - internal,
+              r RIB-failure, S Stale, R Removed
+Origin codes: i - IGP, e - EGP, ? - incomplete
+
+   Network          Next Hop            Metric LocPrf Weight Path
+*&gt; 172.16.29.0/24   172.16.31.2                            0 64513 ?
+*&gt; 172.16.30.0/24   172.16.31.2                            0 64513 ?
+
+Total number of prefixes 2</code></pre></div>
+<h3 id="without-route-summarization">Without Route Summarization</h3>
+
+<p>If you did not use Route Summarization when enabling BGP, the route list will be longer:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-nohighlight" data-lang="nohighlight">admin@usg:~$ show ip bgp
+BGP table version is 0, local router ID is 172.16.31.1
+Status codes: s suppressed, d damped, h history, * valid, &gt; best, i - internal,
+              r RIB-failure, S Stale, R Removed
+Origin codes: i - IGP, e - EGP, ? - incomplete
+
+   Network          Next Hop            Metric LocPrf Weight Path
+*&gt; 172.16.29.10/32  172.16.31.2                            0 64513 ?
+*&gt; 172.16.29.11/32  172.16.31.2                            0 64513 ?
+*&gt; 172.16.29.12/32  172.16.31.2                            0 64513 ?
+*&gt; 172.16.29.13/32  172.16.31.2                            0 64513 ?
+*&gt; 172.16.29.14/32  172.16.31.2                            0 64513 ?
+*&gt; 172.16.29.20/32  172.16.31.2                            0 64513 ?
+*&gt; 172.16.29.21/32  172.16.31.2                            0 64513 ?
+*&gt; 172.16.30.4/32   172.16.31.2                            0 64513 ?
+*&gt; 172.16.30.6/32   172.16.31.2                            0 64513 ?
+*&gt; 172.16.30.7/32   172.16.31.2                            0 64513 ?
+*&gt; 172.16.30.9/32   172.16.31.2                            0 64513 ?</code></pre></div>
+<h2 id="viewing-the-nsx-t-results">Viewing the NSX-T Results</h2>
+
+<p>Check NSX-T for BGP:</p>
+
+<ul>
+<li>SSH into the edge node.</li>
+<li>Find the Tier 0 Logical Router.</li>
+<li>Select the router.</li>
+<li>View the BGP Route table.</li>
+</ul>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json"><span style="color:#a40000">nsxe</span><span style="color:#0000cf;font-weight:bold">-1</span><span style="color:#a40000">&gt;</span> <span style="color:#a40000">get</span> <span style="color:#a40000">logical-routers</span>
+<span style="color:#a40000">Logical</span> <span style="color:#a40000">Router</span>
+<span style="color:#a40000">UUID</span>                                   <span style="color:#a40000">VRF</span>    <span style="color:#a40000">LR-ID</span>  <span style="color:#a40000">Name</span>                              <span style="color:#a40000">Type</span>                        <span style="color:#a40000">Ports</span>  
+<span style="color:#0000cf;font-weight:bold">736</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">80e3</span><span style="color:#0000cf;font-weight:bold">-23</span><span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">6-5</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">2</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">-81</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">6</span><span style="color:#a40000">-bbefb</span><span style="color:#0000cf;font-weight:bold">2786666</span>   <span style="color:#0000cf;font-weight:bold">0</span>      <span style="color:#0000cf;font-weight:bold">0</span>                                        <span style="color:#a40000">TUNNEL</span>                      <span style="color:#0000cf;font-weight:bold">3</span>      
+<span style="color:#0000cf;font-weight:bold">5</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">538</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">01-8110-4</span><span style="color:#a40000">bc</span><span style="color:#0000cf;font-weight:bold">9</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">ca-cc</span><span style="color:#0000cf;font-weight:bold">6</span><span style="color:#a40000">bc</span><span style="color:#0000cf;font-weight:bold">8</span><span style="color:#a40000">ad</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">77</span>   <span style="color:#0000cf;font-weight:bold">1</span>      <span style="color:#0000cf;font-weight:bold">7</span>      <span style="color:#a40000">DR-T</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">Router-PKS-Services</span>          <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#a40000">ae</span><span style="color:#0000cf;font-weight:bold">8</span><span style="color:#a40000">c</span><span style="color:#0000cf;font-weight:bold">73</span><span style="color:#a40000">cc</span><span style="color:#0000cf;font-weight:bold">-21</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">7-40</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">1-8051</span><span style="color:#a40000">-a</span><span style="color:#0000cf;font-weight:bold">8</span><span style="color:#a40000">bac</span><span style="color:#0000cf;font-weight:bold">9</span><span style="color:#a40000">c</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">198</span>   <span style="color:#0000cf;font-weight:bold">2</span>      <span style="color:#0000cf;font-weight:bold">2</span>      <span style="color:#a40000">SR-DefaultT</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#a40000">Router</span>                <span style="color:#a40000">SERVICE_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">0</span>        <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#0000cf;font-weight:bold">33</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#a40000">fcc</span><span style="color:#0000cf;font-weight:bold">7</span><span style="color:#a40000">-eb</span><span style="color:#0000cf;font-weight:bold">2</span><span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">-488</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">-83</span><span style="color:#a40000">aa</span><span style="color:#0000cf;font-weight:bold">-6</span><span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">37</span><span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">3</span><span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">796</span><span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">5</span>   <span style="color:#0000cf;font-weight:bold">3</span>      <span style="color:#0000cf;font-weight:bold">3075</span>   <span style="color:#a40000">SR-lb-pks</span><span style="color:#0000cf;font-weight:bold">-93</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">1e808</span><span style="color:#0000cf;font-weight:bold">-3</span><span style="color:#a40000">cc</span><span style="color:#0000cf;font-weight:bold">8-4410</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">1</span>   <span style="color:#a40000">SERVICE_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>        <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">2197</span><span style="color:#a40000">c</span><span style="color:#0000cf;font-weight:bold">71-7726-4173-8</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">18-0</span><span style="color:#a40000">ae</span><span style="color:#0000cf;font-weight:bold">696</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">2657</span><span style="color:#a40000">e</span>   <span style="color:#0000cf;font-weight:bold">4</span>      <span style="color:#0000cf;font-weight:bold">3073</span>   <span style="color:#a40000">DR-pks</span><span style="color:#0000cf;font-weight:bold">-93</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">1e808</span><span style="color:#0000cf;font-weight:bold">-3</span><span style="color:#a40000">cc</span><span style="color:#0000cf;font-weight:bold">8-4410</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">162</span><span style="color:#a40000">-</span>   <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#0000cf;font-weight:bold">3882</span><span style="color:#a40000">ab</span><span style="color:#0000cf;font-weight:bold">42</span><span style="color:#a40000">-d</span><span style="color:#0000cf;font-weight:bold">404-4166</span><span style="color:#a40000">-a</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">ed-cc</span><span style="color:#0000cf;font-weight:bold">9</span><span style="color:#a40000">ddf</span><span style="color:#0000cf;font-weight:bold">352681</span>   <span style="color:#0000cf;font-weight:bold">5</span>      <span style="color:#0000cf;font-weight:bold">3077</span>   <span style="color:#a40000">DR-pks</span><span style="color:#0000cf;font-weight:bold">-93</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">1e808</span><span style="color:#0000cf;font-weight:bold">-3</span><span style="color:#a40000">cc</span><span style="color:#0000cf;font-weight:bold">8-4410</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">162</span><span style="color:#a40000">-</span>   <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">35</span><span style="color:#a40000">c</span><span style="color:#0000cf;font-weight:bold">8</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#a40000">f-fe</span><span style="color:#0000cf;font-weight:bold">57-4</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">e-a</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#a40000">dc</span><span style="color:#0000cf;font-weight:bold">-71122</span><span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">18</span><span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">363</span>   <span style="color:#0000cf;font-weight:bold">6</span>      <span style="color:#0000cf;font-weight:bold">4</span>      <span style="color:#a40000">DR-T</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">-Router-PAS-ERT</span>              <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">4</span>      
+<span style="color:#0000cf;font-weight:bold">7934</span><span style="color:#a40000">ad</span><span style="color:#0000cf;font-weight:bold">9</span><span style="color:#a40000">c-e</span><span style="color:#0000cf;font-weight:bold">645-442</span><span style="color:#a40000">b-bbe</span><span style="color:#0000cf;font-weight:bold">0-153</span><span style="color:#a40000">bb</span><span style="color:#0000cf;font-weight:bold">191</span><span style="color:#a40000">db</span><span style="color:#0000cf;font-weight:bold">7</span><span style="color:#a40000">a</span>   <span style="color:#0000cf;font-weight:bold">7</span>      <span style="color:#0000cf;font-weight:bold">3079</span>   <span style="color:#a40000">DR-pks</span><span style="color:#0000cf;font-weight:bold">-93</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">1e808</span><span style="color:#0000cf;font-weight:bold">-3</span><span style="color:#a40000">cc</span><span style="color:#0000cf;font-weight:bold">8-4410</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">162</span><span style="color:#a40000">-</span>   <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#a40000">ba</span><span style="color:#0000cf;font-weight:bold">2</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">177</span><span style="color:#a40000">f</span><span style="color:#0000cf;font-weight:bold">-832e-4323</span><span style="color:#a40000">-a</span><span style="color:#0000cf;font-weight:bold">190</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">37</span><span style="color:#a40000">cff</span><span style="color:#0000cf;font-weight:bold">45</span><span style="color:#a40000">df</span><span style="color:#0000cf;font-weight:bold">9</span><span style="color:#a40000">a</span>   <span style="color:#0000cf;font-weight:bold">8</span>      <span style="color:#0000cf;font-weight:bold">5</span>      <span style="color:#a40000">SR-T</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">-Router-PAS-ERT</span>              <span style="color:#a40000">SERVICE_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>        <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#0000cf;font-weight:bold">3</span><span style="color:#a40000">aca</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">9</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">-2550-483</span><span style="color:#a40000">e-b</span><span style="color:#0000cf;font-weight:bold">972-96</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">8</span><span style="color:#a40000">c</span><span style="color:#0000cf;font-weight:bold">3</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">62085</span>   <span style="color:#0000cf;font-weight:bold">9</span>      <span style="color:#0000cf;font-weight:bold">1</span>      <span style="color:#a40000">DR-DefaultT</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#a40000">Router</span>                <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">0</span>    <span style="color:#0000cf;font-weight:bold">14</span>     
+<span style="color:#0000cf;font-weight:bold">68</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">93</span><span style="color:#a40000">df</span><span style="color:#0000cf;font-weight:bold">9</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">849-4246-813</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">-8946</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">8</span><span style="color:#a40000">c</span><span style="color:#0000cf;font-weight:bold">2</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">fd</span>   <span style="color:#0000cf;font-weight:bold">10</span>     <span style="color:#0000cf;font-weight:bold">6</span>      <span style="color:#a40000">DR-T</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">-Router-PAS-Services</span>         <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">67</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">87-59</span><span style="color:#a40000">be</span><span style="color:#0000cf;font-weight:bold">-4122</span><span style="color:#a40000">-a</span><span style="color:#0000cf;font-weight:bold">724-28</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">66</span><span style="color:#a40000">dbc</span><span style="color:#0000cf;font-weight:bold">82e8</span>   <span style="color:#0000cf;font-weight:bold">11</span>     <span style="color:#0000cf;font-weight:bold">3</span>      <span style="color:#a40000">DR-T</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">-Router-PCF-Infra</span>            <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#a40000">c</span><span style="color:#0000cf;font-weight:bold">3302</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">78</span><span style="color:#a40000">-d</span><span style="color:#0000cf;font-weight:bold">6e8</span><span style="color:#0000cf;font-weight:bold">-4721</span><span style="color:#0000cf;font-weight:bold">-80e7</span><span style="color:#0000cf;font-weight:bold">-8</span><span style="color:#a40000">bbde</span><span style="color:#0000cf;font-weight:bold">69589</span><span style="color:#a40000">cb</span>   <span style="color:#0000cf;font-weight:bold">12</span>     <span style="color:#0000cf;font-weight:bold">3078</span>   <span style="color:#a40000">DR-pks</span><span style="color:#0000cf;font-weight:bold">-93</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">1e808</span><span style="color:#0000cf;font-weight:bold">-3</span><span style="color:#a40000">cc</span><span style="color:#0000cf;font-weight:bold">8-4410</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">162</span><span style="color:#a40000">-</span>   <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#a40000">ca</span><span style="color:#0000cf;font-weight:bold">456647-90</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">2-47</span><span style="color:#a40000">d</span><span style="color:#0000cf;font-weight:bold">8</span><span style="color:#0000cf;font-weight:bold">-8e43-0e52129</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">7090</span>   <span style="color:#0000cf;font-weight:bold">13</span>     <span style="color:#0000cf;font-weight:bold">3076</span>   <span style="color:#a40000">DR-pks</span><span style="color:#0000cf;font-weight:bold">-93</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">1e808</span><span style="color:#0000cf;font-weight:bold">-3</span><span style="color:#a40000">cc</span><span style="color:#0000cf;font-weight:bold">8-4410</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">162</span><span style="color:#a40000">-</span>   <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">5</span>      
+<span style="color:#a40000">fa</span><span style="color:#0000cf;font-weight:bold">779916-877</span><span style="color:#a40000">b</span><span style="color:#0000cf;font-weight:bold">-4457</span><span style="color:#a40000">-beb</span><span style="color:#0000cf;font-weight:bold">8-9422</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">08634</span><span style="color:#a40000">ee</span>   <span style="color:#0000cf;font-weight:bold">14</span>     <span style="color:#0000cf;font-weight:bold">3074</span>   <span style="color:#a40000">DR-lb-pks</span><span style="color:#0000cf;font-weight:bold">-93</span><span style="color:#a40000">a</span><span style="color:#0000cf;font-weight:bold">1e808</span><span style="color:#0000cf;font-weight:bold">-3</span><span style="color:#a40000">cc</span><span style="color:#0000cf;font-weight:bold">8-4410</span><span style="color:#a40000">-b</span><span style="color:#0000cf;font-weight:bold">1</span>   <span style="color:#a40000">DISTRIBUTED_ROUTER_TIER</span><span style="color:#0000cf;font-weight:bold">1</span>    <span style="color:#0000cf;font-weight:bold">4</span>
+
+<span style="color:#a40000">nsxe</span><span style="color:#0000cf;font-weight:bold">-1</span><span style="color:#a40000">&gt;</span> <span style="color:#a40000">vrf</span> <span style="color:#0000cf;font-weight:bold">2</span>
+<span style="color:#a40000">nsxe</span><span style="color:#0000cf;font-weight:bold">-1</span><span style="color:#a40000">(tier</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#a40000">_sr)&gt;</span> <span style="color:#a40000">get</span> <span style="color:#a40000">route</span> <span style="color:#a40000">bgp</span>
+
+<span style="color:#a40000">Flags:</span> <span style="color:#a40000">c</span> <span style="color:#a40000">-</span> <span style="color:#a40000">connected,</span> <span style="color:#a40000">s</span> <span style="color:#a40000">-</span> <span style="color:#a40000">static,</span> <span style="color:#a40000">b</span> <span style="color:#a40000">-</span> <span style="color:#a40000">BGP,</span> <span style="color:#a40000">ns</span> <span style="color:#a40000">-</span> <span style="color:#a40000">nsx_static</span>
+<span style="color:#a40000">nc</span> <span style="color:#a40000">-</span> <span style="color:#a40000">nsx_connected,</span> <span style="color:#a40000">rl</span> <span style="color:#a40000">-</span> <span style="color:#a40000">router_link,</span> <span style="color:#a40000">t</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#a40000">n:</span> <span style="color:#a40000">Tier</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#a40000">-NAT,</span> <span style="color:#a40000">t</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">n:</span> <span style="color:#a40000">Tier</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">-NAT</span>
+<span style="color:#a40000">t</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">l:</span> <span style="color:#a40000">Tier</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">-LB</span> <span style="color:#a40000">VIP,</span> <span style="color:#a40000">t</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">s:</span> <span style="color:#a40000">Tier</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#a40000">-LB</span> <span style="color:#a40000">SNAT</span>
+
+
+<span style="color:#a40000">b</span>    <span style="color:#0000cf;font-weight:bold">172.16</span><span style="color:#a40000">.</span><span style="color:#0000cf;font-weight:bold">29.0</span><span style="color:#a40000">/</span><span style="color:#0000cf;font-weight:bold">24</span>       <span style="color:#000;font-weight:bold">[</span><span style="color:#0000cf;font-weight:bold">200</span><span style="color:#a40000">/</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">]</span>       <span style="color:#a40000">via</span> <span style="color:#a40000">Null</span>
+<span style="color:#a40000">b</span>    <span style="color:#0000cf;font-weight:bold">172.16</span><span style="color:#a40000">.</span><span style="color:#0000cf;font-weight:bold">30.0</span><span style="color:#a40000">/</span><span style="color:#0000cf;font-weight:bold">24</span>       <span style="color:#000;font-weight:bold">[</span><span style="color:#0000cf;font-weight:bold">200</span><span style="color:#a40000">/</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">]</span>       <span style="color:#a40000">via</span> <span style="color:#a40000">Null</span></code></pre></div>
+<h1 id="references">References</h1>
+
+<ul>
+<li><p><a href="https://blog.cowger.us/2019/02/10/using-metallb-with-the-unifi-usg-for-in-home-kubernetes-loadbalancer-services.html">Using MetalLB with the Unifi USG for in-home Kubernetes LoadBalancer Services</a></p></li>
+
+<li><p><a href="http://www.diyar.online/2019/03/configure-bgp-between-vmware-nsx-t-tier-0-router-and-physical-network/">Configure BGP between VMware NSX-T Tier-0 Router and Physical Network by SAADALLAH CHEBARO</a></p></li>
+
+<li><p><a href="https://docs.vmware.com/en/VMware-NSX-T-Data-Center/2.3/com.vmware.nsxt.admin.doc/GUID-4BC07C6A-DC62-496B-A6A9-7219ACF5AC7B.html">Configure BGP on a Tier-0 Logical Router from VMware</a></p></li>
+</ul>
+
+    </div>
+        </div>
+        
+           
+          
+  
+
+        
+        
+      </div>
+    
+
+   
+    <footer id="footer" >
+      <div class="w3-container w3-center w3-padding-32"> 
+  
+  <hr class="headfoot">
+  <p>Powered by <a href="https://gohugo.io">Hugo</a> | Theme - <a href="https://github.com/jesselau76/hugo-w3-simple">Hugo W3 Simple</a>
+  </p>
+  &copy; <a href="https://blog.cbmasters.com">Clinton Masters</a> 2019 | <a href="https://github.com/clintonmasters">Github</a> | <a href="/index.xml">RSS</a>
+  
+</div>
+
+    </footer>
+    
+
+    
+  </div>
+
+   
+  <div id="cookiebar" class="w3-bar w3-top w3-black w3-border   " >
+  
+  <span class="w3-bar-item w3-small">This website uses cookies to ensure you get the best experience on our website. <a href="/privacy-policy/">Learn more</a></span>
+  <span onclick="gotitcookiebar()"
+  class="w3-button w3-small w3-green w3-right">Got it</span>
+   </div>
+
+    
+<script>
+function gotitcookiebar() {
+    var x =document.getElementById("cookiebar");
+    x.style.display = "none";
+var x = document.getElementsByTagName("BODY")[0];
+    x.style.paddingTop = "0px";
+    
+
+}
+
+
+    
+function checkCookie() {
+    var user=getCookie("cookiebardisplayed");
+    if (user == "") {
+      setCookie("cookiebardisplayed","0",365);}
+
+    user=getCookie("cookiebardisplayed");
+    if (user =="0")
+    {
+
+        var x =document.getElementById("cookiebar");
+    x.style.display = "block";
+    var h = document.getElementById('cookiebar').clientHeight;
+    
+    var x = document.getElementsByTagName("BODY")[0];
+    x.style.paddingTop = h+"px";
+    setCookie("cookiebardisplayed","1",365);
+    } 
+    
+}
+function setCookie(cname,cvalue,exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires=" + d.toGMTString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+document.addEventListener('DOMContentLoaded', function() {
+    checkCookie();
+}, false);
+
+</script>   
+
+
+  
+    
+      <div id="backtotop" class="w3-hide-small w3-hide-medium">
+  
+        <button onclick="topFunction()" class="w3-btn w3-red w3-large" style="width:160px">Back To Top
+        &rarr;</button>
+        
+      </div>
+
+      <script>
+        function topFunction() {
+          document.body.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
+      }
+      </script>
+
+
+    
+ 
+    
+    <script>
+    
+    function isVisible(elem) {
+
+      let coords = elem.getBoundingClientRect();
+
+      let windowHeight = document.documentElement.clientHeight;
+
+      
+      let topVisible = coords.top > 0 && coords.top < windowHeight;
+      let bottomVisible = coords.bottom < windowHeight && coords.bottom > 0;
+
+      return topVisible || bottomVisible;
+    }
+
+    
+
+    function showVisible() {
+      for (let img of document.querySelectorAll('img')) {
+        let realSrc = img.dataset.src;
+        if (!realSrc) continue;
+
+        if (isVisible(img)) {
+          
+
+          img.src = realSrc;
+
+          img.dataset.src = '';
+        }
+      }
+      if ( Array.from(document.querySelectorAll('[data-src]')).every(
+        img => img.getAttribute('data-src') === '') ) {
+        window.removeEventListener('scroll', showVisible)
+      }
+
+    }
+
+    window.addEventListener('scroll', showVisible);
+    showVisible();
+  </script>
+
+
+    
+    
+      <div class="progress-container" id="scrollbar">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>  
+
+
+    
+<script>
+
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+  <!-- TOC -->
+    
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        document.getElementById("toc").style.display = "block";
+    } else {
+        document.getElementById("toc").style.display = "none";
+    }
+    
+    <!-- cookie bar -->
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        var x =document.getElementById("cookiebar");
+        x.style.display = "none";
+        var x = document.getElementsByTagName("BODY")[0];
+        x.style.paddingTop = "0px";
+
+    } 
+    
+<!-- Back to top -->
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        document.getElementById("backtotop").style.display = "block";
+    } else {
+        document.getElementById("backtotop").style.display = "none";
+    }
+    
+    <!-- scroll indicator -->
+    
+      var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      var scrolled = (winScroll / height) * 100;
+      document.getElementById("progress-bar").style.width = scrolled + "%";
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            document.getElementById("scrollbar").style.display = "block";
+        } else {
+            document.getElementById("scrollbar").style.display = "none";
+        }
+    
+
+    
+
+    <!-- allowads -->
+    
+}
+
+
+</script>
+
+
+
+  
+
+</body>
+</html>

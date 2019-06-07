@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Lab on C B Masters</title>
+    <title>lab on C B Masters</title>
     <link>https://blog.cbmasters.com/categories/lab/</link>
-    <description>Recent content in Lab on C B Masters</description>
+    <description>Recent content in lab on C B Masters</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 31 Jan 2019 19:01:28 -0500</lastBuildDate>
+    <lastBuildDate>Thu, 06 Jun 2019 21:31:56 -0400</lastBuildDate>
     
 	<atom:link href="https://blog.cbmasters.com/categories/lab/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>BGP &amp; NSX-T &amp; USG</title>
+      <link>https://blog.cbmasters.com/posts/bgp-nsxt-usg/</link>
+      <pubDate>Thu, 06 Jun 2019 21:31:56 -0400</pubDate>
+      
+      <guid>https://blog.cbmasters.com/posts/bgp-nsxt-usg/</guid>
+      <description>BGP (Border Gateway Protocol) between VMware NSX-T and USG (Ubiquiti Security Gateway) Setup exterior BGP (Border Gateway Protocol) between VMware NSX-T and USG (Ubiquiti Security Gateway). When trying NSX-T most start with static routes. If we want to experiment with more advanced failure recovery modes with the edge, we need to move from static routes to a dynamic routing protocol between the upstream router and the NSX-T edge nodes. This exercise configures BGP between NSX-T and a USG.</description>
+    </item>
     
     <item>
       <title>Samba AD</title>
