@@ -8,7 +8,7 @@
 <meta http-equiv="Cache-Control" content="public" />
 <!-- Enable responsiveness on mobile devices -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="generator" content="Hugo 0.55.6" />
+<meta name="generator" content="Hugo 0.59.0" />
 
     
     
@@ -25,8 +25,8 @@
 <meta property="og:description" content="Using [Samba](https://www.samba.org/) for LDAP, Active Directory, and Dynamic DNS." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://blog.cbmasters.com/posts/samba-ad/" />
-<meta property="article:published_time" content="2019-01-31T19:01:28-05:00"/>
-<meta property="article:modified_time" content="2019-01-31T19:01:28-05:00"/>
+<meta property="article:published_time" content="2019-01-31T19:01:28-05:00" />
+<meta property="article:modified_time" content="2019-01-31T19:01:28-05:00" />
 
 
 
@@ -143,6 +143,7 @@ function displaymenu() {
 <div class="w3-content">
     
       <div>
+        
         <div id="content" >
           
     
@@ -157,15 +158,25 @@ function displaymenu() {
 <li>
 <ul>
 <li><a href="#install-bind">Install BIND</a></li>
-<li><a href="#install-samba">Install Samba</a></li>
+<li><a href="#install-samba">Install Samba</a>
+<ul>
+<li><a href="#configure-compile">Configure &amp; Compile</a></li>
+<li><a href="#install">Install</a></li>
+<li><a href="#create-systemd-service-files">Create systemd Service Files</a></li>
+</ul></li>
 <li><a href="#samba-configuration">Samba Configuration</a>
 <ul>
 <li><a href="#fix-app-armor">Fix App Armor</a></li>
-<li><a href="#testing">Testing</a></li>
+<li><a href="#test-dns-records">Test DNS Records</a></li>
 <li><a href="#configure-ldaps">Configure LDAPS</a></li>
 <li><a href="#allow-anonymous-binds-and-searches">Allow anonymous binds and searches</a></li>
 </ul></li>
-<li><a href="#add-sample-data">Add Sample Data</a></li>
+<li><a href="#add-sample-data">Add Sample Data</a>
+<ul>
+<li><a href="#test-the-sample-data">Test the Sample Data</a></li>
+</ul></li>
+<li><a href="#setup-an-app-to-search">Setup an App to Search</a></li>
+<li><a href="#password">Password</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -215,7 +226,7 @@ function displaymenu() {
 
 <h2 id="install-bind">Install BIND</h2>
 
-<p>Installing BIND 9 since Samba&rsquo;s internal DNS does not support wildcards entries.</p>
+<p>First install BIND 9 since Samba&rsquo;s internal DNS does not support wildcards entries.</p>
 
 <p>Follow <a href="https://wiki.samba.org/index.php/Setting_up_a_BIND_DNS_Server">Samba BIND Setup</a></p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ sudo apt install bind9 ldap-utils</code></pre></div>
@@ -235,7 +246,7 @@ function displaymenu() {
 
         forward only;</code></pre></div>
 <p>Also uncomment the include line in <code>/etc/bind/named.conf.local</code> to provide reverse lookups.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4">include &#34;/etc/bind/zones.rfc1918&#34;;</pre></div>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">include &#34;/etc/bind/zones.rfc1918&#34;;</code></pre></div>
 <p>Restart named.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo systemctl restart bind9</code></pre></div>
 <h2 id="install-samba">Install Samba</h2>
@@ -243,10 +254,10 @@ function displaymenu() {
 <p>Check the samba version</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ samba -V
 Version <span style="color:#0000cf;font-weight:bold">4</span>.7.6-Ubuntu</code></pre></div>
-<p>This version is too old.  Build from source following <a href="https://wiki.samba.org/index.php/Build_Samba_from_Source#Introduction">Build Guide</a>.</p>
+<p>This Samba version is too old, therefore build from source following <a href="https://wiki.samba.org/index.php/Build_Samba_from_Source#Introduction">Build Guide</a>.</p>
 
 <p>Start with <a href="https://wiki.samba.org/index.php/Package_Dependencies_Required_to_Build_Samba#Debian_.2F_Ubuntu">Install dependencies</a>.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo apt purge samba 
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo apt purge samba
 clint:~$ sudo apt remove libwbclient0
 clint:~$ sudo apt auto-remove
 clint:~$ sudo apt-get install acl attr autoconf bind9utils bison build-essential debhelper <span style="color:#4e9a06">\
@@ -258,14 +269,15 @@ clint:~$ sudo apt-get install acl attr autoconf bind9utils bison build-essential
 </span><span style="color:#4e9a06"></span>python3-gpg python-markdown python3-markdown python3-dev xsltproc zlib1g-dev liblmdb-dev <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>lmdb-utils libsystemd-dev
 
-clint:~/code$ wget https://download.samba.org/pub/samba/stable/samba-4.9.4.tar.gz
+clint:~/code$ wget https://download.samba.org/pub/samba/stable/samba-4.11.2.tar.gz
 
-clint:~/code$ tar -zxf samba-4.9.4.tar.gz </code></pre></div>
+clint:~/code$ tar -zxf samba-4.11.2.tar.gz</code></pre></div>
+<h3 id="configure-compile">Configure &amp; Compile</h3>
+
 <p>Use configure options to match the samba directory structure more or less match what we expect on Ubuntu.  The list below is modifed from <a href="https://vapour-apps.com/build-samba-4-9-from-source-on-debian-9-or-ubuntu-18-04/">Vapour-Apps</a>.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~/code/samba-4.9.4$ sed -E <span style="color:#4e9a06">&#34;/Type=notify|NotifyAccess=all/d&#34;</span> <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>./bin/default/packaging/systemd/samba.service
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~/code/samba-4.11.2$ <span style="color:#8f5902;font-style:italic"># sed -E &#34;/Type=notify|NotifyAccess=all/d&#34; ./bin/default/packaging/systemd/samba.service</span>
 
-clint:~/code/samba-4.9.4$ ./configure <span style="color:#4e9a06">\
+clint:~/code/samba-4.11.2$ ./configure <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>--prefix<span style="color:#ce5c00;font-weight:bold">=</span>/usr <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>--enable-fhs <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>--sysconfdir<span style="color:#ce5c00;font-weight:bold">=</span>/etc <span style="color:#4e9a06">\
@@ -283,23 +295,52 @@ clint:~/code/samba-4.9.4$ ./configure <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>--with-cachedir<span style="color:#ce5c00;font-weight:bold">=</span>/var/cache/samba <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>--systemd-install-services</code></pre></div>
 <p>Start the make with a thread per cpu.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~/code/samba-4.9.4$ make -j2</code></pre></div>
-<p>If you would like a apt package use <em>checkinstall</em>.  My results were mixed.  Specify the version in <code>--pkgversion</code> to match Ubuntu format for Samba.  This is version 4.9.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~/code/samba-4.9.4$ sudo apt install checkinstall
-clint:~/code/samba-4.9.4$ make install
-clint:~/code/samba-4.9.4$ sudo checkinstall --requires<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;acl,attr,bind9utils,bison,debhelper,dnsutils,docbook-xml,docbook-xsl,flex,gdb,krb5-user,libacl1-dev,libattr1-dev,libcups2-dev,libgnutls28-dev,libgpgme11-dev,libjson-perl,libldap2-dev,libncurses5-dev,libpam0g-dev,libparse-yapp-perl,perl,perl-modules,python-crypto,python-dbg,python-dnspython,python3-dnspython,python-gpg,python3-gpg,python-markdown,python3-markdown,xsltproc,lmdb-utils&#39;</span> -y --pkgversion<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">2</span>:4.9.4
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~/code/samba-4.11.2$ make -j4</code></pre></div>
+<h3 id="install">Install</h3>
+
+<p>If you would like a apt package use <em>checkinstall</em>.  My results were mixed.  Specify the version in <code>--pkgversion</code> to match Ubuntu format for Samba.  This is version 4.11.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~/code/samba-4.11.2$ sudo apt install checkinstall
+clint:~/code/samba-4.11.2$ make install
+clint:~/code/samba-4.11.2$ sudo checkinstall --requires<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;acl,attr,bind9utils,bison,debhelper,dnsutils,docbook-xml,docbook-xsl,flex,gdb,krb5-user,libacl1-dev,libattr1-dev,libcups2-dev,libgnutls28-dev,libgpgme11-dev,libjson-perl,libldap2-dev,libncurses5-dev,libpam0g-dev,libparse-yapp-perl,perl,perl-modules,python-crypto,python-dbg,python-dnspython,python3-dnspython,python-gpg,python3-gpg,python-markdown,python3-markdown,xsltproc,lmdb-utils&#39;</span> -y --pkgversion<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">2</span>:4.11.2
 
 **********************************************************************
 
  Done. The new package has been installed and saved to
 
- /home/clint/code/samba-4.9.4/samba_4.9.4-1_amd64.deb
+ /home/clint/code/samba-4.11.2/samba_4.11.2-1_amd64.deb
 
  You can remove it from your system anytime using: 
 
       dpkg -r samba
 
 **********************************************************************</code></pre></div>
+<h3 id="create-systemd-service-files">Create systemd Service Files</h3>
+
+<p>modifed from <a href="https://wiki.samba.org/index.php/Managing_the_Samba_AD_DC_Service_Using_Systemd">https://wiki.samba.org/index.php/Managing_the_Samba_AD_DC_Service_Using_Systemd</a></p>
+
+<p>ubuntu is still using /lib/systemd instead of /usr/lib/systemd.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;/lib/systemd/system/samba-ad-dc.service
+</span><span style="color:#4e9a06">[Unit]
+</span><span style="color:#4e9a06">Description=Samba Active Directory Domain Controller
+</span><span style="color:#4e9a06">After=network.target remote-fs.target nss-lookup.target
+</span><span style="color:#4e9a06">
+</span><span style="color:#4e9a06">[Service]
+</span><span style="color:#4e9a06">Type=forking
+</span><span style="color:#4e9a06">ExecStart=/usr/sbin/samba -D
+</span><span style="color:#4e9a06">PIDFile=/var/run/samba/samba.pid
+</span><span style="color:#4e9a06">ExecReload=/bin/kill -HUP $MAINPID
+</span><span style="color:#4e9a06">
+</span><span style="color:#4e9a06">[Install]
+</span><span style="color:#4e9a06">WantedBy=multi-user.target
+</span><span style="color:#4e9a06">EOF</span>
+
+$ sudo systemctl daemon-reload
+$ sudo systemctl <span style="color:#204a87">enable</span> samba-ad-dc
+Created symlink /etc/systemd/system/multi-user.target.wants/samba-ad-dc.service → /lib/systemd/system/samba-ad-dc.service.
+$ sudo systemctl start samba-ad-dc</code></pre></div>
+<p>Get the status</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ systemctl status samba-ad-dc
+● samba-ad-dc.service - Samba Active Directory Domain Controller</code></pre></div>
 <h2 id="samba-configuration">Samba Configuration</h2>
 
 <p>Setup a few variables for use in the installation.  These need to be customized to your domain name, etc..</p>
@@ -324,7 +365,7 @@ DNS Domain:            lab.example.com
 DOMAIN SID:            S-1-5-21-111679553-2008934376-681026361
 
 clint:~$ sudo cp /var/lib/samba/private/krb5.conf /etc/krb5.conf</code></pre></div>
-<p>Things you do in lab &hellip; turn off password aging and complexity.</p>
+<p>Things you do only in lab&ndash;turn off password aging and complexity.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo samba-tool domain passwordsettings <span style="color:#204a87">set</span> --complexity<span style="color:#ce5c00;font-weight:bold">=</span>off
 clint:~$ sudo samba-tool domain passwordsettings <span style="color:#204a87">set</span> --history-length<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">0</span>
 clint:~$ sudo samba-tool domain passwordsettings <span style="color:#204a87">set</span> --min-pwd-age<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">0</span>
@@ -353,7 +394,7 @@ clint:~$ sudo samba-tool domain passwordsettings <span style="color:#204a87">set
 clint:~$ sudo systemctl restart bind9</code></pre></div>
 <p>Use <code>journalctl</code> to check logs.</p>
 
-<h3 id="testing">Testing</h3>
+<h3 id="test-dns-records">Test DNS Records</h3>
 
 <p>Test the DNS records.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ host -t SRV _ldap._tcp.lab.example.com. <span style="color:#0000cf;font-weight:bold">127</span>.0.0.1
@@ -364,12 +405,12 @@ clint:~$ host -t A jump.lab.example.com.</code></pre></div>
 <p>The default setup creates a self-signed certificate in <code>/var/lib/samba/private/tls</code>.  Follow <a href="https://wiki.samba.org/index.php/Configuring_LDAP_over_SSL_(LDAPS)_on_a_Samba_AD_DC">Samba LDAP Guide</a> if you would like to specify your own cert.</p>
 
 <p>Skip SSL verification by adding &ldquo;tls&rdquo; line to <code>/etc/samba/smb.conf</code>.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"># Skip TLS check
-tls verify peer = no_check</pre></div>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"># Skip TLS check
+tls verify peer = no_check</code></pre></div>
 <p>This server had docker running since its a test server so we also need to limit Samba&rsquo;s interfaces binding by add these lines to <code>/etc/samba/smb.conf</code>.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"># Don&#39;t use Docker interfaces
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"># Don&#39;t use Docker interfaces
 bind interfaces only = yes
-interfaces = lo en* eth*</pre></div>
+interfaces = lo en* eth*</code></pre></div>
 <p>Restart Samba</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ sudo systemctl restart samba</code></pre></div>
 <h3 id="allow-anonymous-binds-and-searches">Allow anonymous binds and searches</h3>
@@ -377,19 +418,13 @@ interfaces = lo en* eth*</pre></div>
 <p>Follow <a href="https://fy.blackhats.net.au/blog/html/2018/04/18/making_samba_4_the_default_ldap_server.html?highlight=samba">Firstyear&rsquo;s blog</a> for adding anonymous binds and searches.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ samba-tool forest directory_service dsheuristics <span style="color:#0000cf;font-weight:bold">0000002</span> -H ldaps://localhost --simple-bind-dn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#000">$ADMIN</span><span style="color:#4e9a06">&#34;</span>
 
-clint:~$ <span style="color:#204a87">export</span> <span style="color:#000">ADMIN</span><span style="color:#ce5c00;font-weight:bold">=</span>administrator@lab.example.com
-
-clint:~$ <span style="color:#204a87">export</span> <span style="color:#000">BASEDN</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">DC</span><span style="color:#ce5c00;font-weight:bold">=</span>lab,DC<span style="color:#ce5c00;font-weight:bold">=</span>cbmasters,DC<span style="color:#ce5c00;font-weight:bold">=</span>com
-
-clint:~$ ldapsearch -b <span style="color:#000">$BASEDN</span> -H ldap://localhost -x
-
 clint:~$ samba-tool dsacl <span style="color:#204a87">set</span> --objectdn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$BASEDN</span> --sddl<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;(A;;RPLCLORC;;;AN)&#39;</span> --simple-bind-dn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#000">$ADMIN</span><span style="color:#4e9a06">&#34;</span> --password<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$PASSWD</span>
 
 clint:~$ samba-tool dsacl <span style="color:#204a87">set</span> --objectdn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$BASEDN</span> --sddl<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;(A;CI;RPLCLORC;;;AN)&#39;</span> --simple-bind-dn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#000">$ADMIN</span><span style="color:#4e9a06">&#34;</span> --password<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$PASSWD</span>
 
 clint:~$ samba-tool dsacl <span style="color:#204a87">set</span> --objectdn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$BASEDN</span> --sddl<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;(A;CI;RPLCLORC;;;AN)&#39;</span> --simple-bind-dn<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#000">$ADMIN</span><span style="color:#4e9a06">&#34;</span> --password<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$PASSWD</span></code></pre></div>
 <p>LDAP SSL in on port 636.  Basic is 389.  Check that Samba is listening to LDAP ports.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#8f5902;font-style:italic"># lsof -i -P -n | grep -E &#39;636|389&#39;</span></code></pre></div>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ sudo lsof -i -P -n <span style="color:#000;font-weight:bold">|</span> grep -E <span style="color:#4e9a06">&#39;636|389&#39;</span></code></pre></div>
 <h2 id="add-sample-data">Add Sample Data</h2>
 
 <p>Following <a href="https://wiki.samba.org/index.php/Adding_users_with_samba_tool">Samba Adding Users Guide</a>, add a user.</p>
@@ -399,7 +434,32 @@ clint:~$ samba-tool dsacl <span style="color:#204a87">set</span> --objectdn<span
 </span><span style="color:#4e9a06"></span>--login-shell /bin/bash <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>--unix-home /home/user <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>--gid-number <span style="color:#0000cf;font-weight:bold">2005</span> <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>--gecos <span style="color:#4e9a06">&#39;Test User,,,&#39;</span> </code></pre></div>
+</span><span style="color:#4e9a06"></span>--gecos <span style="color:#4e9a06">&#39;Test User,,,&#39;</span></code></pre></div>
+<p>Create groups</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">clint:~$ samba-tool group add pks-users <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>-H <span style="color:#000">$SERVER</span> -U <span style="color:#000">$USER</span>%<span style="color:#000">$PASSWD</span>
+
+clint:~$ samba-tool group addmembers pks-users clint <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>-H <span style="color:#000">$SERVER</span> -U <span style="color:#000">$USER</span>%<span style="color:#000">$PASSWD</span></code></pre></div>
+<h3 id="test-the-sample-data">Test the Sample Data</h3>
+
+<p>clint:~$ export ADMIN=administrator@lab.example.com
+clint:~$ export BASEDN=DC=lab,DC=cbmasters,DC=com
+clint:~$ ldapsearch -b $BASEDN -H ldap://localhost -x</p>
+
+<p>samba-tool user show &ndash;URL=ldap://localhost clint</p>
+
+<h2 id="setup-an-app-to-search">Setup an App to Search</h2>
+
+<p>In the application that is going to search LDAP, set the following parameters:</p>
+
+<p>| User Search Base | cn=Users,dc=labs,dc=example,dc=com |
+| User Search Filter | sAMAccountName={0} |
+| Group Search Base | cn=Users,dc=labs,dc=example,dc=com |
+| Group Search Filter | member={0} |</p>
+
+<h2 id="password">Password</h2>
+
                  
                 
          
@@ -459,12 +519,12 @@ clint:~$ samba-tool dsacl <span style="color:#204a87">set</span> --objectdn<span
     <div class="w3-content" > 
       <div class="w3-bar w3-section">
 	     
-	      <a  href="/posts/bgp-nsxt-usg/" class="w3-btn w3-text-indigo w3-hover-green">
+	      <a  href="https://blog.cbmasters.com/posts/bgp-nsxt-usg/" class="w3-btn w3-text-indigo w3-hover-green">
 	          &#10094; BGP &amp; NSX-T &amp; USG
 	      </a>
 	    
-	      <a class="w3-btn w3-right w3-text-indigo w3-hover-green" href="/posts/jumpbox/">
-	       Jumpbox &#10095;
+	      <a class="w3-btn w3-right w3-text-indigo w3-hover-green" href="https://blog.cbmasters.com/posts/hugo/">
+	       Hugo &#10095;
 	      </a>
   	  </div>
     </div>
@@ -649,11 +709,13 @@ function scrollFunction() {
   <!-- TOC -->
     
     
+    
     if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
         document.getElementById("toc").style.display = "block";
     } else {
         document.getElementById("toc").style.display = "none";
     }
+    
     
     <!-- cookie bar -->
     

@@ -14,25 +14,23 @@
     
     
 
-<title>usg • C B Masters</title>
+<title>Hugo • C B Masters</title>
 
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="usg"/>
-<meta name="twitter:description" content="Masters"/>
+<meta name="twitter:title" content="Hugo"/>
+<meta name="twitter:description" content="Remember to [Hugo](https://gohugo.io/)"/>
 
-<meta property="og:title" content="usg" />
-<meta property="og:description" content="Masters" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://blog.cbmasters.com/tags/usg/" />
+<meta property="og:title" content="Hugo" />
+<meta property="og:description" content="Remember to [Hugo](https://gohugo.io/)" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://blog.cbmasters.com/posts/hugo/" />
+<meta property="article:published_time" content="2019-01-01T09:59:06-05:00" />
+<meta property="article:modified_time" content="2019-01-01T09:59:06-05:00" />
 
-<meta property="og:updated_time" content="2019-06-06T21:31:56-04:00" />
 
 
-
-<link rel="canonical" href="https://blog.cbmasters.com/tags/usg/" />
-<link href="https://blog.cbmasters.com/tags/usg/index.xml" rel="alternate" type="application/rss+xml" title="C B Masters" />
-  <link href="https://blog.cbmasters.com/tags/usg/index.xml" rel="feed" type="application/rss+xml" title="C B Masters" />
+<link rel="canonical" href="https://blog.cbmasters.com/posts/hugo/" />
 
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -147,231 +145,71 @@ function displaymenu() {
       <div>
         
         <div id="content" >
-          <div class="w3-content w3-card-4" >
-
-<h1 class="w3-center">usg</h1>
-
-
-
-
-
-  
-  
-
-
-  
-    
-      <div class="w3-row  w3-section">
-    
-    
-    <div class="w3-col w3-container w3-section m12 l4 ">
-      <div class="w3-card-2 w3-hover-shadow " >
-
-        
           
-            
-             
-             
-                  
-                  <div class="w3-hover-opacity thumb ">
-                     
-                        <img src="/images/nsxt-bgp/nsxt-bgp-config.png" alt="Thumbnail" /></div>
-                      
-                  
-            
-          
-        
-   
-      <header class="w3-container wraptext w3-text-indigo">
-        <h4><a href="https://blog.cbmasters.com/posts/bgp-nsxt-usg/">BGP &amp; NSX-T &amp; USG</a></h4>
-        
-               
-      </header>
-
-
-    <div class="w3-container wraptext w3-white">
-      <code> 2019/06/06 </code>
+    <div class="w3-container w3-card-4">
       
-      <p>
-        
-        
-      
-      BGP (Border Gateway Protocol) between VMware NSX-T and USG (Ubiquiti Security Gateway)
-      </p>
 
+<p>How to Hugo.</p>
+
+<h2 id="linking-to-a-theme">Linking to a theme</h2>
+
+<p>Link to Jesse&rsquo;s theme as a submodule.  Then create <em>cbm</em> folder for overrides and static content.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ git submodule add https://github.com/jesselau76/hugo-w3-simple.git themes/hugo-w3-simple
+$ mkdir themes/cbm</code></pre></div>
+<p>Modify <em>config.toml</em> to use both themes.</p>
+
+<h2 id="publish">Publish</h2>
+
+<p>Use a submodule to publish to public github.  Then we can run Hugo locally, test, and push later.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ git submodule add https://github.com/clintonmasters/clintonmasters.github.io.git public</code></pre></div>
+<h2 id="scripts">Scripts</h2>
+
+<p>Test the content</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#8f5902;font-style:italic">#!/usr/bin/env bash
+</span><span style="color:#8f5902;font-style:italic"></span>
+<span style="color:#8f5902;font-style:italic"># Go To Public folder</span>
+<span style="color:#204a87">cd</span> <span style="color:#000">$HOME</span>/code/blog
+
+<span style="color:#204a87">echo</span>
+<span style="color:#204a87">echo</span> -e <span style="color:#4e9a06">&#34;Open\033[0;32m http://localhost:1313/ \033[0mto test blog.&#34;</span>
+<span style="color:#204a87">echo</span>
+
+<span style="color:#8f5902;font-style:italic"># Serve with drafts enabled</span>
+hugo server -D</code></pre></div>
+<p>Push the content</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#8f5902;font-style:italic">#!/usr/bin/env bash
+</span><span style="color:#8f5902;font-style:italic"></span>
+<span style="color:#204a87">echo</span> -e <span style="color:#4e9a06">&#34;\033[0;32mDeploying updates to GitHub...\033[0m&#34;</span>
+
+<span style="color:#8f5902;font-style:italic"># Build the project.</span>
+hugo <span style="color:#8f5902;font-style:italic"># if using a theme, replace with `hugo -t &lt;YOURTHEME&gt;`</span>
+
+<span style="color:#8f5902;font-style:italic"># Go To Public folder</span>
+<span style="color:#204a87">cd</span> <span style="color:#000">$HOME</span>/code/blog/public
+<span style="color:#8f5902;font-style:italic"># Add changes to git.</span>
+git add .
+
+<span style="color:#8f5902;font-style:italic"># Commit changes.</span>
+<span style="color:#000">msg</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;rebuilding site `date`&#34;</span>
+<span style="color:#204a87;font-weight:bold">if</span> <span style="color:#ce5c00;font-weight:bold">[</span> <span style="color:#000">$#</span> -eq <span style="color:#0000cf;font-weight:bold">1</span> <span style="color:#ce5c00;font-weight:bold">]</span>
+  <span style="color:#204a87;font-weight:bold">then</span> <span style="color:#000">msg</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#000">$1</span><span style="color:#4e9a06">&#34;</span>
+<span style="color:#204a87;font-weight:bold">fi</span>
+git commit -m <span style="color:#4e9a06">&#34;</span><span style="color:#000">$msg</span><span style="color:#4e9a06">&#34;</span>
+
+<span style="color:#8f5902;font-style:italic"># Push source and build repos.</span>
+git push origin master</code></pre></div>
+<h2 id="asciidoctor">Asciidoctor</h2>
+
+<p>How to use Asciidoctor instead of Markdown.   Useful for the diagram feature.
+<a href="http://ratfactor.com/hugo-adoc-html5s/">http://ratfactor.com/hugo-adoc-html5s/</a></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gem install asciidoctor asciidoctor-html5s asciidoctor-diagram concurrent-ruby
+Gems are in <span style="color:#000">$HOME</span>/.gem/ruby/2.6.0</code></pre></div>
     </div>
-
-     
-
-      <footer >
-        <a href="https://blog.cbmasters.com/posts/bgp-nsxt-usg/"><button class="w3-button w3-blue w3-block w3-hover-green">Read More</button></a>
-      </footer>
-    </div>
-    </div>
-    
-
-  
-    
-    
-    <div class="w3-col w3-container w3-section m12 l4 ">
-      <div class="w3-card-2 w3-hover-shadow " >
-
-        
-        <div class="w3-hover-opacity thumb">
-           
-             
-              <img src="https://www.samba.org/samba/style/2010/samba_2010_logo_transparent_151x27.png" alt="Thumbnail" />
-            
-        </div>
-        
-   
-      <header class="w3-container wraptext w3-text-indigo">
-        <h4><a href="https://blog.cbmasters.com/posts/samba-ad/">Samba AD</a></h4>
-        
-               
-      </header>
-
-
-    <div class="w3-container wraptext w3-white">
-      <code> 2019/01/31 </code>
-      
-      <p>
-        
-        
-      
-      Using <a href="https://www.samba.org/">Samba</a> for LDAP, Active Directory, and Dynamic DNS.
-      </p>
-
-    </div>
-
-     
-
-      <footer >
-        <a href="https://blog.cbmasters.com/posts/samba-ad/"><button class="w3-button w3-blue w3-block w3-hover-green">Read More</button></a>
-      </footer>
-    </div>
-    </div>
-    
-
-  
-    
-    
-      
-    
-    <div class="w3-col w3-container w3-section m12 l4 ">
-      <div class="w3-card-2 w3-hover-shadow " >
-
-        
-        <div class="w3-hover-opacity thumb">
-           
-          
-            <img src="/placeholder.svg" data-src="https://d33wubrfki0l68.cloudfront.net/c38c7334cc3f23585738e40334284fddcaf03d5e/2e17c/images/hugo-logo-wide.svg" alt="Thumbnail" />
-            
-        </div>
-        
-   
-      <header class="w3-container wraptext w3-text-indigo">
-        <h4><a href="https://blog.cbmasters.com/posts/hugo/">Hugo</a></h4>
-        
-               
-      </header>
-
-
-    <div class="w3-container wraptext w3-white">
-      <code> 2019/01/01 </code>
-      
-      <p>
-        
-        
-      
-      Remember to <a href="https://gohugo.io/">Hugo</a>
-      </p>
-
-    </div>
-
-     
-
-      <footer >
-        <a href="https://blog.cbmasters.com/posts/hugo/"><button class="w3-button w3-blue w3-block w3-hover-green">Read More</button></a>
-      </footer>
-    </div>
-    </div>
-    
-      </div>
-    
-
-  
-    
-      <div class="w3-row  w3-section">
-    
-    
-      
-    
-    <div class="w3-col w3-container w3-section m12 l4 ">
-      <div class="w3-card-2 w3-hover-shadow " >
-
-        
-        <div class="w3-hover-opacity thumb">
-           
-          
-            <img src="/placeholder.svg" data-src="/images/ubuntu.svg" alt="Thumbnail" />
-            
-        </div>
-        
-   
-      <header class="w3-container wraptext w3-text-indigo">
-        <h4><a href="https://blog.cbmasters.com/posts/jumpbox/">Jumpbox</a></h4>
-        
-               
-      </header>
-
-
-    <div class="w3-container wraptext w3-white">
-      <code> 2018/06/07 </code>
-      
-      <p>
-        
-        
-      
-      Faster deployments in Public Cloud
-      </p>
-
-    </div>
-
-     
-
-      <footer >
-        <a href="https://blog.cbmasters.com/posts/jumpbox/"><button class="w3-button w3-blue w3-block w3-hover-green">Read More</button></a>
-      </footer>
-    </div>
-    </div>
-    
-      </div>
-    
-
-   
-
-  
-  </ul>
-
-  </div>
-
-  <br>
-  <div class="w3-content" > 
-    <div class="w3-bar w3-section w3-hide-large w3-hide-medium">
-          
-    
-      
-  </div>
-  <nav class="w3-center w3-hide-small">
-
-</nav>
-</div>
-
         </div>
         
            
           
+  
 
         
         
@@ -541,6 +379,13 @@ window.onscroll = function() {scrollFunction()};
 function scrollFunction() {
   <!-- TOC -->
     
+    
+    
+    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
+        document.getElementById("toc").style.display = "block";
+    } else {
+        document.getElementById("toc").style.display = "none";
+    }
     
     
     <!-- cookie bar -->

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>C B Masters</title>
@@ -27,10 +27,24 @@
       
       <guid>https://blog.cbmasters.com/posts/samba-ad/</guid>
       <description>A guide to using Samba for LDAP, Active Directory, and Dynamic DNS.
-Install BIND Installing BIND 9 since Samba&amp;rsquo;s internal DNS does not support wildcards entries.
+Install BIND First install BIND 9 since Samba&amp;rsquo;s internal DNS does not support wildcards entries.
 Follow Samba BIND Setup
 $ sudo apt install bind9 ldap-utils Modify the named config /etc/bind/named.conf.options to include networks we allow DNS forwarding.
 allow-query { 127.0.0.1; 10.0.0.0/8; 172.16.0.0/12; 192.168.0.0/16; }; recursion yes; forwarders { 172.16.31.1; }; forward only; Also uncomment the include line in /etc/bind/named.</description>
+    </item>
+    
+    <item>
+      <title>Hugo</title>
+      <link>https://blog.cbmasters.com/posts/hugo/</link>
+      <pubDate>Tue, 01 Jan 2019 09:59:06 -0500</pubDate>
+      
+      <guid>https://blog.cbmasters.com/posts/hugo/</guid>
+      <description>How to Hugo.
+Linking to a theme Link to Jesse&amp;rsquo;s theme as a submodule. Then create cbm folder for overrides and static content.
+$ git submodule add https://github.com/jesselau76/hugo-w3-simple.git themes/hugo-w3-simple $ mkdir themes/cbm Modify config.toml to use both themes.
+Publish Use a submodule to publish to public github. Then we can run Hugo locally, test, and push later.
+$ git submodule add https://github.com/clintonmasters/clintonmasters.github.io.git public Scripts Test the content
+#!/usr/bin/env bash  # Go To Public folder cd $HOME/code/blog echo echo -e &amp;#34;Open\033[0;32m http://localhost:1313/ \033[0mto test blog.</description>
     </item>
     
     <item>

@@ -22,7 +22,7 @@
 <meta http-equiv="Cache-Control" content="public" />
 <!-- Enable responsiveness on mobile devices -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="generator" content="Hugo 0.55.6" />
+<meta name="generator" content="Hugo 0.59.0" />
 
     
     
@@ -125,6 +125,7 @@ function gosearch() {
 <div class="w3-content">
     
       <div>
+        
         <div id="content" >
           <?php
   if ($q<>'')
@@ -349,11 +350,13 @@ function scrollFunction() {
   <!-- TOC -->
     
     
+    
     if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
         document.getElementById("toc").style.display = "block";
     } else {
         document.getElementById("toc").style.display = "none";
     }
+    
     
     <!-- cookie bar -->
     
